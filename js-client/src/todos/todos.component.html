@@ -1,0 +1,31 @@
+<h1>Todos</h1>
+
+<mat-form-field><input matInput placeholder="your todo" [(ngModel)]="todo"></mat-form-field>
+
+<button mat-raised-button color="primary"
+  (click)="addTodo(todo)"
+  [disabled]=!todo
+  *ngIf="!editing">
+    Add todo
+</button>
+
+<button mat-raised-button
+  (click)="updateTodo(todo)"
+  *ngIf="editing">
+    Update
+</button>
+
+<button mat-raised-button color="warn"
+  (click)="cancelEdit()"
+  *ngIf="editing">
+    Cancel
+</button>
+
+<ul>
+  <li *ngFor="let todo of todos$ | async; let i = index;">
+    <span [class.done]="todo.done">{{ todo.value }}</span>
+    <button mat-raised-button (click)="editTodo(todo, i)">Edit</button>
+    <button mat-raised-button (click)="toggleDone(todo, i)">Toggle Done</button>
+    <button mat-raised-button color="warn" (click)="deleteTodo(i)">X</button>
+  </li>
+</ul>

@@ -1,0 +1,133 @@
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_docker//java:image.bzl", "java_image")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("@k8s_deploy//:defaults.bzl", "k8s_deploy",)
+
+# Compile Java & make the container image
+java_library(
+    name = "todo",
+    srcs = ["src/main/java/com/example/Todo.java"],
+)
+
+java_library(
+    name = "todo_not_found_exception",
+    srcs = ["src/main/java/com/example/TodoNotFoundException.java"],
+    deps = [
+			"@org_springframework_spring_web//jar",
+    ],
+)
+
+java_library(
+    name = "todo_controller",
+    srcs = ["src/main/java/com/example/TodoController.java"],
+		deps = [
+			":todo",
+      ":todo_not_found_exception",
+			"@org_springframework_spring_web//jar",
+			"@org_springframework_boot_spring_boot_starter//jar",
+      "@org_springframework_boot_spring_boot_starter_web//jar"
+		],
+)
+
+# Create a Java image
+java_image(
+    name = "java_spring_boot_image",
+    srcs = ["src/main/java/com/example/Application.java"],
+    main_class = "com.example.Application",
+    deps = [
+			":todo",
+			":todo_controller",
+			"@commons_logging_commons_logging//jar",
+			"@org_springframework_spring_aop//jar",
+			"@org_springframework_spring_beans//jar",
+			"@org_springframework_spring_context//jar",
+			"@org_springframework_spring_core//jar",
+			"@org_springframework_spring_expression//jar",
+      "@ch_qos_logback_logback_classic//jar",
+      "@ch_qos_logback_logback_core//jar",
+      "@com_fasterxml_classmate//jar",
+      "@com_fasterxml_jackson_core_jackson_annotations//jar",
+      "@com_fasterxml_jackson_core_jackson_core//jar",
+      "@com_fasterxml_jackson_core_jackson_databind//jar",
+      "@com_fasterxml_jackson_datatype_jackson_datatype_jdk8//jar",
+      "@com_fasterxml_jackson_datatype_jackson_datatype_jsr310//jar",
+      "@com_fasterxml_jackson_module_jackson_module_parameter_names//jar",
+      "@com_jayway_jsonpath_json_path//jar",
+      "@com_vaadin_external_google_android_json//jar",
+      "@javax_annotation_javax_annotation_api//jar",
+      "@javax_validation_validation_api//jar",
+      "@junit_junit//jar",
+      "@net_bytebuddy_byte_buddy//jar",
+      "@net_bytebuddy_byte_buddy_agent//jar",
+      "@net_minidev_accessors_smart//jar",
+      "@net_minidev_json_smart//jar",
+      "@org_apache_logging_log4j_log4j_api//jar",
+      "@org_apache_logging_log4j_log4j_to_slf4j//jar",
+      "@org_apache_tomcat_embed_tomcat_embed_core//jar",
+      "@org_apache_tomcat_embed_tomcat_embed_el//jar",
+      "@org_apache_tomcat_embed_tomcat_embed_websocket//jar",
+      "@org_assertj_assertj_core//jar",
+      "@org_hamcrest_hamcrest_core//jar",
+      "@org_hamcrest_hamcrest_library//jar",
+      "@org_hibernate_validator_hibernate_validator//jar",
+      "@org_jboss_logging_jboss_logging//jar",
+      "@org_mockito_mockito_core//jar",
+      "@org_objenesis_objenesis//jar",
+      "@org_ow2_asm_asm//jar",
+      "@org_skyscreamer_jsonassert//jar",
+      "@org_slf4j_jul_to_slf4j//jar",
+      "@org_slf4j_slf4j_api//jar",
+      "@org_springframework_boot_spring_boot//jar",
+      "@org_springframework_boot_spring_boot_autoconfigure//jar",
+      "@org_springframework_boot_spring_boot_starter//jar",
+      "@org_springframework_boot_spring_boot_starter_json//jar",
+      "@org_springframework_boot_spring_boot_starter_logging//jar",
+      "@org_springframework_boot_spring_boot_starter_test//jar",
+      "@org_springframework_boot_spring_boot_starter_tomcat//jar",
+      "@org_springframework_boot_spring_boot_starter_web//jar",
+      "@org_springframework_boot_spring_boot_test//jar",
+      "@org_springframework_boot_spring_boot_test_autoconfigure//jar",
+      "@org_springframework_spring_jcl//jar",
+      "@org_springframework_spring_test//jar",
+      "@org_springframework_spring_web//jar",
+      "@org_springframework_spring_webmvc//jar",
+      "@org_xmlunit_xmlunit_core//jar",
+      "@org_yaml_snakeyaml//jar",
+		],
+)
+
+# create a container image with our java_image in it
+container_image(
+    name = "app_image",
+    base = ":java_spring_boot_image",
+    ports = ["8080"],
+    directory = "/app",
+    workdir = "/app",
+)
+
+# configure k8s deployment
+k8s_deploy(
+    name = "k8s",
+    cluster = "$(cluster)",
+    context = "$(cluster)",
+    image_chroot = "$(repo)",
+    images = {
+        "java_spring_boot:do_not_delete": ":app_image",
+    },
+    template = "//java-spring-boot/manifests:deployment.yaml",
+)

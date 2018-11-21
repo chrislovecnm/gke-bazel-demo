@@ -25,35 +25,79 @@
 set -o nounset
 set -o pipefail
 
+CONTEXT=$(kubectl config get-contexts -o=name | grep "$(gcloud config get-value project).*gke-bazel-tutorial")
+
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-# shellcheck source=scripts/common.sh
+# shellcheck source=/dev/null
 source "$ROOT/scripts/common.sh"
 
-APP_NAME=$(kubectl get deployments -n default \
-  -ojsonpath='{.items[0].metadata.labels.app}')
-APP_MESSAGE="deployment \"$APP_NAME\" successfully rolled out"
-
+# shellcheck source=/dev/null
 cd "$ROOT/terraform" || exit; CLUSTER_NAME=$(terraform output cluster_name) \
   ZONE=$(terraform output primary_zone)
 
 # Get credentials for the k8s cluster
 gcloud container clusters get-credentials "$CLUSTER_NAME" --zone="$ZONE"
 
+
+# Check rollout status of the JS client
+JS_APP_NAME=$(kubectl get deployments -n default \
+  -ojsonpath='{.items[0].metadata.labels.app}')
+JS_APP_MESSAGE="deployment \"$JS_APP_NAME\" successfully rolled out"
+
 SUCCESSFUL_ROLLOUT=false
 for _ in {1..30}; do
   ROLLOUT=$(kubectl rollout status -n default \
-    --watch=false deployment/"$APP_NAME") &> /dev/null
-  if [[ $ROLLOUT = *"$APP_MESSAGE"* ]]; then
+    --watch=false deployment/"$JS_APP_NAME") &> /dev/null
+  if [[ $ROLLOUT = *"$JS_APP_MESSAGE"* ]]; then
     SUCCESSFUL_ROLLOUT=true
     break
   fi
   sleep 2
 done
 
-if [ "$SUCCESSFUL_ROLLOUT" = false ]
-then
-  echo "ERROR - Application failed to deploy"
+if [ "$SUCCESSFUL_ROLLOUT" = false ]; then
+  echo "ERROR - $JS_APP_NAME failed to deploy"
   exit 1
+else
+  echo "$JS_APP_NAME successfully deployed"
 fi
 
-echo "App is deployed."
+
+# Check rollout status of the Java API
+JAVA_APP_NAME=$(kubectl get deployments -n default \
+  -ojsonpath='{.items[1].metadata.labels.app}')
+JAVA_APP_MESSAGE="deployment \"$JAVA_APP_NAME\" successfully rolled out"
+
+SUCCESSFUL_ROLLOUT=false
+for _ in {1..30}; do
+  ROLLOUT=$(kubectl rollout status -n default \
+    --watch=false deployment/"$JAVA_APP_NAME") &> /dev/null
+  if [[ $ROLLOUT = *"$JAVA_APP_MESSAGE"* ]]; then
+    SUCCESSFUL_ROLLOUT=true
+    break
+  fi
+  sleep 2
+done
+
+if [ "$SUCCESSFUL_ROLLOUT" = false ]; then
+  echo "ERROR - $JAVA_APP_NAME failed to deploy"
+  exit 1
+else
+  echo "$JAVA_APP_NAME successfully deployed"
+fi
+
+
+# run Java API tests
+API_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=java-spring-boot -o jsonpath='{..ip}')
+# shellcheck source=/dev/null
+source "$ROOT/scripts/java-spring-boot-tests.sh" "$API_IP"
+
+# curl angular endpoint
+ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=angular-client -o jsonpath='{..ip}')
+ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$ANGULAR_IP")
+
+if [ "$ANGULAR_STATUS" == 200 ]; then
+	echo "The Angular client is gettable."
+else
+	echo "The Angular client has a problem, returned status $ANGULAR_STATUS"
+fi

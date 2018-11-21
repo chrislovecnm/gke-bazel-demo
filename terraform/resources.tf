@@ -57,6 +57,10 @@ resource "google_container_cluster" "primary" {
   provisioner "local-exec" {
     command = "sleep 120"
   }
+
+  provisioner "local-exec" {
+    command = "gcloud container clusters get-credentials ${google_container_cluster.primary.name} --zone ${google_container_cluster.primary.zone} --project ${var.project}"
+  }
 }
 
 resource "google_project_service" "container" {

@@ -24,30 +24,152 @@ set -o nounset
 set -o pipefail
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-# shellcheck source=scripts/common.sh
+# shellcheck source=/dev/null
 source "$ROOT/scripts/common.sh"
 
-#CONTEXT=$(kubectl config get-contexts -o=name | grep "$(gcloud config get-value project).*gke-bazel-tutorial")
-
-CONTEXT="gke-bazel-tutorial"
-
-REPO=gcr.io/$(gcloud config get-value project)
-
-bazel run \
-  --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
-  --define cluster="${CONTEXT}" \
-  --define repo="${REPO}" \
-  //js-client:k8s.apply
-  --java_debug
-
-# Just building the Java binary
-# bazel build //java-server:ProjectRunner
-
-# bazel run \
-  # --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 \
-  # --define cluster="${CONTEXT}" \
-  # --define repo="${REPO}" \
-  # //java-server:k8s.apply
-  --java_debug
+PROJECT=$(gcloud config get-value project)
+CONTEXT=$(kubectl config get-contexts -o=name | \
+	grep "$PROJECT.*gke-bazel-tutorial")
+REPO=gcr.io/$PROJECT
 
 
+#########################
+# RBE setup (if enabled)
+# (See DEVELOPER.md)
+#########################
+
+# If you want to enable RBE, set it when calling `make create`
+# Any non-false value will enable RBE options (ex: RBE=true make create)
+RBE="${RBE:-false}"
+
+RBE_FLAGS=(--config=remote
+	--remote_instance_name="projects/$PROJECT/instances/default_instance"
+	--project_id="$PROJECT")
+
+if  [[ $RBE != false ]]; then
+	# Issue some warnings about RBE on GCP
+	echo -e "\\n*************************************************************\n\
+WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\n\
+See README for instructions on setting up RBE support in this demo.\n\
+*************************************************************\n"
+
+	# if RBE, add remote config to .bazelrc
+	cp ".bazelrc.remote" ".bazelrc"
+fi
+
+
+##################
+# Deploy Java API
+##################
+
+# Use Bazel to compile, build, and deploy the Java Spring Boot API
+JAVA_CMD=(bazel run
+  --define "cluster=${CONTEXT}"
+  --define "repo=${REPO}"
+  //java-spring-boot:k8s.apply)
+
+if [[ $RBE != false ]]; then
+	JAVA_CMD+=(${RBE_FLAGS[@]})
+	echo "Running remote JAVA_CMD = ${JAVA_CMD[@]}"
+fi
+
+# RBE can't run on mac yet
+if [[ $RBE != false && "$OSTYPE" == "darwin"* ]]; then
+	# shellcheck source=/dev/null
+	source "$ROOT/scripts/planter.sh" "${JAVA_CMD[@]}"
+else
+	"${JAVA_CMD[@]}"
+fi
+
+
+##############################
+# Update Angular API endpoint
+##############################
+
+# make sure Angular is talking to the deployed Java API, not local
+echo -n "Waiting for Java service to setup endpoints..."
+for _ in {1..60}; do
+  API_IP=$(kubectl --namespace default --context="${CONTEXT}" \
+    get svc -lapp=java-spring-boot -o jsonpath='{..ip}')
+  if [[ $API_IP =~ [(0-9)+\.]{4} ]]; then
+		echo "done."
+    break
+  fi
+  sleep 2
+done
+
+# handle timeout
+if [ -z "$API_IP" ]; then
+	echo -e "Getting the Java API IP address timed out.\n\
+Check on the service and re-run 'make create'."
+	exit 1
+fi
+
+sed -i '.bak' "s/localhost:8080/${API_IP}/g" \
+	"js-client/src/todos/todos.service.ts"
+
+echo "Updated Angular client to speak to ${API_IP}"
+
+
+########################
+# Deploy Angular Client
+########################
+
+# Use Bazel to compile, build, and deploy the Angular client
+JS_CMD=(bazel run
+  --define "cluster=${CONTEXT}"
+  --define "repo=${REPO}"
+  //js-client:k8s.apply)
+
+if [[ $RBE != false ]]; then
+	JS_CMD+=(${RBE_FLAGS[@]})
+	echo "Running remote JS_CMD = ${JS_CMD[@]}"
+fi
+
+# See https://github.com/bazelbuild/rules_nodejs/issues/396
+if [[ "$OSTYPE" == "darwin"* ]]; then
+	# shellcheck source=/dev/null
+	source "$ROOT/scripts/planter.sh" "${JS_CMD[@]}"
+else
+	"${JS_CMD[@]}"
+fi
+
+
+#########
+# Output
+#########
+
+# output the IP address of the angular app service to view in browser
+echo -n "Waiting for Angular service to setup endpoints..."
+for _ in {1..60}; do
+  ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" \
+    get svc -lapp=angular-client -o jsonpath='{..ip}')
+  if [[ $ANGULAR_IP =~ [(0-9)+\.]{4} ]]; then
+    echo "done."
+    break
+  fi
+  sleep 2
+done
+
+# handle timeout
+if [ -z "$ANGULAR_IP" ]; then
+	echo -e "Getting the Angular client IP address timed out.\n\
+Check on the service and re-run 'make create'."
+	exit 1
+fi
+
+echo "View your angular client at http://${ANGULAR_IP}"
+
+
+##########
+# Cleanup
+##########
+
+# put js-client/src/todos/todos.service.ts back to original API (localhost)
+mv "js-client/src/todos/todos.service.ts.bak" \
+	 "js-client/src/todos/todos.service.ts"
+
+# if RBE, revert .bazelrc to local
+if  [[ $RBE != false ]]; then
+	cp ".bazelrc.local" ".bazelrc"
+fi

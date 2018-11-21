@@ -35,12 +35,16 @@ crash.log
 #
 # example.tfvars
 
-*.json
-
 bazel-*
 
 dist
+js-client/dist
 js-client/bazel-*
-node_modules
+js-client/node_modules
+js-client/**/*.bak
 
+java-server/target
+java-spring-boot/target
 
+planter
+!planter/.gitkeep

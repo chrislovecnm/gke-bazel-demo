@@ -14,11 +14,6 @@
 
 package(default_visibility = ["//visibility:public"])
 
-alias(
-    name = "install",
-    actual = "@nodejs//:yarn",
-)
-
 # ts_library and ng_module use the `//:tsconfig.json` target
 # by default. This alias allows omitting explicit tsconfig
 # attribute.
@@ -26,3 +21,4 @@ alias(
     name = "tsconfig.json",
     actual = "//js-client/src:tsconfig.json",
 )
+

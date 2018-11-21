@@ -17,7 +17,8 @@ SHELL := /usr/bin/env bash
 
 .PHONY: lint
 lint: check_shell check_shebangs check_python check_golang check_terraform \
-	check_docker check_base_files check_headers check_trailing_whitespace
+	check_docker check_base_files check_headers check_trailing_whitespace \
+	check_java check_angular
 
 .PHONY: terraform
 terraform:
@@ -34,6 +35,10 @@ validate:
 .PHONY: teardown
 teardown:
 	@source scripts/teardown.sh
+
+.PHONY: destroy_apps
+destroy_apps:
+	@source scripts/destroy_apps.sh
 
 # The .PHONY directive tells make that this isn't a real target and so
 # the presence of a file named 'check_shell' won't cause this target to stop
@@ -73,4 +78,12 @@ check_trailing_whitespace:
 .PHONY: check_headers
 check_headers:
 	@echo "Checking file headers"
-	@python test/verify_boilerplate.py
+	@python3 test/verify_boilerplate.py
+
+.PHONY: check_java
+check_java:
+	@source test/make.sh && check_java
+
+.PHONY: check_angular
+check_angular:
+	@source test/make.sh && check_angular

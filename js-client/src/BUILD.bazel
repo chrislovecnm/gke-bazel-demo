@@ -1,3 +1,17 @@
+# Copyright 2018 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 package(default_visibility = ["//visibility:public"])
 
 load("@angular//:index.bzl", "ng_module")
@@ -6,14 +20,18 @@ load("@build_bazel_rules_typescript//:defs.bzl", "ts_config", "ts_devserver")
 ts_config(
     name = "tsconfig-test",
     src = "tsconfig-test.json",
-    deps = [":tsconfig.json"],
+    deps = ["//js-client:tsconfig.json"],
 )
 
 ng_module(
     name = "src",
-    srcs = glob(["*.ts"]),
+    srcs = glob(
+        ["*.ts"],
+        exclude = ["main.ts"],
+    ),
     assets = [
         ":app.component.html",
+        "//js-client/src/styles:main",
     ],
     tsconfig = ":tsconfig.json",
     deps = [
@@ -22,7 +40,6 @@ ng_module(
         "//js-client/src/todos",
         "@angular//packages/core",
         "@angular//packages/router",
-        "@npm//@ngrx/store",
     ],
 )
 
@@ -37,12 +54,10 @@ ts_devserver(
         "npm/node_modules/zone.js/dist",
         "npm/node_modules/tslib",
         "npm/node_modules/@angular/material/prebuilt-themes",
-        "npm/node_modules/@ngrx/store/bundles",
     ],
     # Start from the development version of the main
-    entry_module = "angular_bazel_example/src/main.dev",
+    entry_module = "gke_bazel_example/js-client/src/main.dev",
     scripts = [
-        ":require.config.js",
         ":module-id.js",
     ],
     # This is the URL we'll point our <script> tag at
@@ -52,7 +67,8 @@ ts_devserver(
         "@npm//node_modules/zone.js:dist/zone.min.js",
         "@npm//node_modules/tslib:tslib.js",
         "@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css",
-        "@npm//node_modules/@ngrx/store:bundles/store.umd.min.js",
+        "//js-client/src/styles:main.css",
+        "//js-client/src/images:image_assets",
         "index.html",
     ],
     # Tell Bazel to build the sources first
@@ -72,10 +88,9 @@ rollup_bundle(
         "js-client/src/hello-world/hello-world.module.ngfactory",
         "js-client/src/todos/todos.module.ngfactory",
     ],
-    entry_point = "js-client/src/main",
+    entry_point = "js-client/src/main.prod",
     deps = [
         "//js-client/src",
-        "@npm//@ngrx/store",
     ],
 )
 
@@ -107,6 +122,7 @@ genrule(
 
 load("@build_bazel_rules_nodejs//:defs.bzl", "history_server")
 
+# Run a production server with history-server
 history_server(
     name = "prodserver",
     data = [
@@ -115,36 +131,29 @@ history_server(
         ":copy_material_theme",
         ":copy_systemjs",
         ":copy_zonejs",
+        "//js-client/src/images:image_assets",
+        "//js-client/src/styles:main",
     ],
 )
 
 ####
 
-nodejs_binary(
-    name = "lite-server",
-    entry_point = "lite-server/bin/lite-server"
-)
-
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
-load("@io_bazel_rules_docker//container:container.bzl", "container_image")
 
+# Create a NodeJS image that runs history-server as the prod server
 nodejs_image(
-    name = "nodejs_image",
-    entry_point = "angular_bazel_example_prod_deps/node_modules/lite-server/bin/lite-server",
-    templated_args = ["--baseDir=js-client/src"],
-    node_modules = "@angular_bazel_example_prod_deps//:node_modules",
+    name = "angular_image",
+    args = [""],
     data = [
-        ":zone.min.js",
-        ":index.html",
-        ":bundle.js", # FIXME:
+        "index.html",
+        ":bundle",
+        ":copy_material_theme",
+        ":copy_systemjs",
+        ":copy_zonejs",
+        "//js-client/src/styles:main",
+        "//js-client/src/images:image_assets",
     ],
-    #FIXME should be:
-    # data = [":app-es5-bundle.min.js"],
+    entry_point = "history-server/modules/cli.js",
+    node_modules = "@npm//:node_modules",
+    templated_args = ["js-client/src"],
 )
-
-container_image(
-    name = "image",
-    base = ":nodejs_image",
-    workdir = "/app/src/nodejs_image.binary.runfiles/angular_bazel_example",
-    # ports = ["9200"],
-) 

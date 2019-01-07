@@ -26,6 +26,7 @@ function remove_apps(){
     delete svc/"angular-client" deploy/"angular-client" 
   kubectl --namespace default --context="${CONTEXT}" \
     delete svc/"java-spring-boot" deploy/"java-spring-boot"  
+  bazel clean --expunge
   sleep 180
   echo "done."
   echo "***********************************************************"
@@ -34,7 +35,7 @@ function remove_apps(){
 
 # LOCAL
 
-remove_apps &>1 >> outputt.log 
+remove_apps &>1 >> output.log 
 
 echo -n "Timing local create..."
 
@@ -45,10 +46,10 @@ echo "done."
 
 # REMOTE
 
-remove_apps &>1 >> output.log 
+remove_apps &>1 >> output.log
 
 echo -n "Timing remote create..."
 
-{ REMOTE=true time make create; } &>1 >> output.log
+{ RBE=true time make create; } &>1 >> output.log
 
 echo "done."

@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Rules for k8s
+load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
+
 package(default_visibility = ["//visibility:public"])
 
 alias(
     name = "install",
     actual = "@nodejs//:yarn",
 )
-
-# Rules for k8s
-load("@k8s_deploy//:defaults.bzl", "k8s_deploy")
 
 k8s_deploy(
     name = "k8s",

@@ -124,5 +124,10 @@ Google Cloud Platform has [RBE support in alpha](https://blog.bazel.build/2018/1
 
 1. Fill out [this form](https://docs.google.com/forms/d/e/1FAIpQLScBai-iQ2tn7RcGcsz3Twjr4yDOeHowrb6-3v5qlgS69GcxbA/viewform) to get alpha access.
 2. When you're onboarded to the alpha program, you'll be asked to give project ids to the team so they can whitelist your project as able to use RBE.
-3. When you're onboarded to the alpha program, you'll be given documentation. Follow that documentation to enable RBE for your project and properly authenticate to RBE.
-4. Run the `make create` step of this demo with an RBE flag, like this: `RBE=true make create`.
+3. You may want to re-authenticate to ensure your alpha access is configured locally with `gcloud auth application-default login`.
+3. Run the `make create` step of this demo with an RBE flag, like this: `RBE=true make create`.
+
+Troubleshooting:
+* If you want to verify your alpha access and RBE authentication are correct, the RBE documentation has instructions for building an example application. Follow those instructions to verify your setup.
+* If you're getting errors when running `gcloud` alpha commands in `scripts/create.sh`, make sure to update all gcloud components: `gcloud components update`.
+* If you're not the owner of the project you're using, you'll likely need to add some IAM roles to your account to enable the RBE API & create worker pools.

@@ -48,3 +48,5 @@ java-spring-boot/target
 
 planter
 !planter/.gitkeep
+
+output.log

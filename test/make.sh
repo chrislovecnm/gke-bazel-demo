@@ -88,7 +88,7 @@ function check_java() {
 # This function runs the `yarn buildifier` command.
 function check_angular() {
   echo "Formatting Angular"
-  cd js-client && yarn buildifier
+  cd js-client && yarn bazel:format && yarn bazel:lint
   find src -name "*.ts" -not -path "./node_modules/*" -exec sh -c \
     '"$(npm bin)"/clang-format -style="Google" -i "$1"' \
 		-x {} \;

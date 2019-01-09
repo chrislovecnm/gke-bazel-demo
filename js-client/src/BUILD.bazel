@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package(default_visibility = ["//visibility:public"])
-
 load("@angular//:index.bzl", "ng_module")
+load("@build_bazel_rules_nodejs//:defs.bzl", "history_server", "rollup_bundle")
 load("@build_bazel_rules_typescript//:defs.bzl", "ts_config", "ts_devserver")
+load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
+
+package(default_visibility = ["//visibility:public"])
 
 ts_config(
     name = "tsconfig-test",
@@ -75,8 +77,6 @@ ts_devserver(
     deps = ["//js-client/src"],
 )
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "nodejs_binary", "rollup_bundle")
-
 rollup_bundle(
     name = "bundle",
     # These Angular routes may be lazy-loaded at runtime.
@@ -120,8 +120,6 @@ genrule(
     cmd = "cp $< $@",
 )
 
-load("@build_bazel_rules_nodejs//:defs.bzl", "history_server")
-
 # Run a production server with history-server
 history_server(
     name = "prodserver",
@@ -138,8 +136,6 @@ history_server(
 
 ####
 
-load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
-
 # Create a NodeJS image that runs history-server as the prod server
 nodejs_image(
     name = "angular_image",
@@ -150,8 +146,8 @@ nodejs_image(
         ":copy_material_theme",
         ":copy_systemjs",
         ":copy_zonejs",
-        "//js-client/src/styles:main",
         "//js-client/src/images:image_assets",
+        "//js-client/src/styles:main",
     ],
     entry_point = "history-server/modules/cli.js",
     node_modules = "@npm//:node_modules",

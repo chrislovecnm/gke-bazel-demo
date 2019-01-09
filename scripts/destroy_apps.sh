@@ -20,8 +20,8 @@ CONTEXT=$(kubectl config get-contexts -o=name | \
 
 echo "Deleting apps..."
 kubectl --namespace default --context="${CONTEXT}" \
-  delete svc/"angular-client" deploy/"angular-client" 
+  delete svc/"angular-client" deploy/"angular-client"
 kubectl --namespace default --context="${CONTEXT}" \
-  delete svc/"java-spring-boot" deploy/"java-spring-boot"  
+  delete svc/"java-spring-boot" deploy/"java-spring-boot"
 sleep 180
 echo "done."

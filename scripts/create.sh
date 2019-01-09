@@ -42,19 +42,48 @@ REPO=gcr.io/$PROJECT
 # Any non-false value will enable RBE options (ex: RBE=true make create)
 RBE="${RBE:-false}"
 
-RBE_FLAGS=(--config=remote
-	--remote_instance_name="projects/$PROJECT/instances/default_instance"
-	--project_id="$PROJECT")
+RBE_FLAGS=(
+  "--config=remote"
+	"--remote_instance_name=projects/$PROJECT/instances/default_instance"
+	"--project_id=$PROJECT"
+)
 
 if  [[ $RBE != false ]]; then
 	# Issue some warnings about RBE on GCP
-	echo -e "\\n*************************************************************\n\
-WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\n\
-See README for instructions on setting up RBE support in this demo.\n\
-*************************************************************\n"
+	echo -e "\\n*************************************************************\\n\
+WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\\n\
+See README for instructions on setting up RBE support in this demo.\\n\
+*************************************************************\\n"
 
 	# if RBE, add remote config to .bazelrc
 	cp ".bazelrc.remote" ".bazelrc"
+
+	# if RBE, gcloud needs alpha component
+	gcloud components install alpha
+
+  # if RBE, enable API (this also creates default_instance)
+  gcloud services enable remotebuildexecution.googleapis.com \
+    "--project=$PROJECT"
+
+  # if RBE, create a worker pool, if one doesn't exist
+	POOL_LIST=$(gcloud alpha remote-build-execution worker-pools list \
+		 --instance=default_instance)
+
+	if [[ ! "$POOL_LIST" =~ "state: RUNNING" ]]; then
+		echo -n "Creating an RBE worker pool..."
+
+		POOL_NAME="$PROJECT-rbe-pool"
+		gcloud alpha remote-build-execution worker-pools create \
+			"${POOL_NAME:0:50}" \
+			--instance=default_instance \
+			--worker-count=3 \
+			--machine-type=n1-standard-2 \
+			--disk-size=50
+
+		echo "done."
+	else
+		echo "Using the existing RBE worker pool."
+	fi
 fi
 
 
@@ -69,14 +98,14 @@ JAVA_CMD=(bazel run
   //java-spring-boot:k8s.apply)
 
 if [[ $RBE != false ]]; then
-	JAVA_CMD+=(${RBE_FLAGS[@]})
-	echo "Running remote JAVA_CMD = ${JAVA_CMD[@]}"
+	JAVA_CMD+=("${RBE_FLAGS[@]}")
+	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
 fi
 
 # RBE can't run on mac yet
 if [[ $RBE != false && "$OSTYPE" == "darwin"* ]]; then
 	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${JAVA_CMD[@]}"
+	source "$ROOT/scripts/planter.sh" "${JAVA_CMD[*]}"
 else
 	"${JAVA_CMD[@]}"
 fi
@@ -100,7 +129,7 @@ done
 
 # handle timeout
 if [ -z "$API_IP" ]; then
-	echo -e "Getting the Java API IP address timed out.\n\
+	echo -e "Getting the Java API IP address timed out.\\n\
 Check on the service and re-run 'make create'."
 	exit 1
 fi
@@ -122,8 +151,8 @@ JS_CMD=(bazel run
   //js-client:k8s.apply)
 
 if [[ $RBE != false ]]; then
-	JS_CMD+=(${RBE_FLAGS[@]})
-	echo "Running remote JS_CMD = ${JS_CMD[@]}"
+	JS_CMD+=("${RBE_FLAGS[@]}")
+	echo "Running remote JS_CMD = ${JS_CMD[*]}"
 fi
 
 # See https://github.com/bazelbuild/rules_nodejs/issues/396
@@ -153,7 +182,7 @@ done
 
 # handle timeout
 if [ -z "$ANGULAR_IP" ]; then
-	echo -e "Getting the Angular client IP address timed out.\n\
+	echo -e "Getting the Angular client IP address timed out.\\n\
 Check on the service and re-run 'make create'."
 	exit 1
 fi

@@ -12,11 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
 # ts_library and ng_module use the `//:tsconfig.json` target
 # by default. This alias allows omitting explicit tsconfig
-# attribute.
+# attribute, and uses //js-client/src:tsconfig.json whenever
+# //:tsconfig.json is called
+# See https://docs.bazel.build/versions/master/be/general.html#alias
 alias(
     name = "tsconfig.json",
     actual = "//js-client/src:tsconfig.json",

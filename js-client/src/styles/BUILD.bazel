@@ -12,20 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Instantiate the Bazel rules we use in this build file.
 load("@io_bazel_rules_sass//:defs.bzl", "sass_binary", "sass_library")
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
+# Doesn't generate any outputs, simply defines
+# a collection of Sass files to use as a dependency
+# in the sass_binary rule below
+# See https://github.com/bazelbuild/rules_sass
 sass_library(
     name = "colors",
     srcs = ["colors.scss"],
 )
 
+# Doesn't generate any outputs, simply defines
+# a collection of Sass files to use as a dependency
+# in the sass_binary rule below
+# See https://github.com/bazelbuild/rules_sass
 sass_library(
     name = "fonts",
     srcs = ["fonts.scss"],
 )
 
+# Doesn't generate any outputs, simply defines
+# a collection of Sass files to use as a dependency
+# in the sass_binary rule below
+# See https://github.com/bazelbuild/rules_sass
 sass_library(
     name = "shared",
     srcs = ["shared.scss"],
@@ -35,9 +53,14 @@ sass_library(
     ],
 )
 
+# Compile Sass source files and produce css
+# See https://github.com/bazelbuild/rules_sass
 sass_binary(
+    # the name of this target
     name = "main",
+    # the source file for this Sass
     src = "main.scss",
+    # the dependencies needed to compile
     deps = [
         ":colors",
         ":fonts",

@@ -12,29 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Instantiate the Bazel rules we use in this build file.
 load("@angular//:index.bzl", "ng_module")
 load("@build_bazel_rules_typescript//:defs.bzl", "ts_library", "ts_web_test_suite")
 load("@io_bazel_rules_sass//:defs.bzl", "sass_binary")
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
+# Compile Sass source files and produce css
+# See https://github.com/bazelbuild/rules_sass
 sass_binary(
+    # the name of this target
     name = "hello-world-styles",
+    # the source file for this Sass
     src = "hello-world.component.scss",
+    # the dependencies needed to compile
     deps = ["//js-client/src/styles:shared"],
 )
 
+# Use Angular's ng tool to compile the source code into an NgModule
+# It behaves the same as `ts_library` but with additional attributes
+# See https://github.com/alexeagle/angular-bazel-example/wiki/Angular-rules#compiling-angular-templates
 ng_module(
     name = "hello-world",
+    # the sourcefiles used to compile
     srcs = [
         "hello-world.component.ts",
         "hello-world.module.ts",
     ],
+    # the HTML and Sass targets that output assets
+    # we use in this module
     assets = [
         ":hello-world.component.html",
         ":hello-world-styles",
     ],
+    # the tsconfig to pass to the typescript compiler
     tsconfig = "//js-client/src:tsconfig.json",
+    # other dependencies we need to compile this module
     deps = [
         "//js-client/src/lib",
         "//js-client/src/material",
@@ -44,6 +63,8 @@ ng_module(
     ],
 )
 
+# A Typescript library to compose for running tests
+# See https://github.com/bazelbuild/rules_typescript#compiling-typescript-ts_library
 ts_library(
     name = "test_lib",
     testonly = 1,
@@ -60,6 +81,8 @@ ts_library(
     ],
 )
 
+# Typescript compiling our test suite
+# See https://github.com/bazelbuild/rules_typescript
 ts_web_test_suite(
     name = "test",
     srcs = ["@npm//node_modules/tslib:tslib.js"],

@@ -12,30 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Instantiate the Bazel rules we use in this build file.
 load("@angular//:index.bzl", "ng_module")
 load("@build_bazel_rules_nodejs//:defs.bzl", "history_server", "rollup_bundle")
 load("@build_bazel_rules_typescript//:defs.bzl", "ts_config", "ts_devserver")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
+# Declare the Typescript config file that Bazel should pass
+# to the Typescript compiler whenever we use it in our targets
+# The ng_module rule below compiles Typescript.
+# See https://github.com/bazelbuild/rules_typescript/blob/master/internal/ts_config.bzl
 ts_config(
     name = "tsconfig-test",
     src = "tsconfig-test.json",
     deps = ["//js-client:tsconfig.json"],
 )
 
+# Use Angular's ng tool to compile the source code into an NgModule
+# It behaves the same as `ts_library` but with additional attributes
+# See https://github.com/alexeagle/angular-bazel-example/wiki/Angular-rules#compiling-angular-templates
 ng_module(
     name = "src",
+    # the sourcefiles used to compile
     srcs = glob(
         ["*.ts"],
         exclude = ["main.ts"],
     ),
+    # the HTML and Sass targets that output assets
+    # we use in this module
     assets = [
         ":app.component.html",
         "//js-client/src/styles:main",
     ],
+    # the tsconfig to pass to the typescript compiler
     tsconfig = ":tsconfig.json",
+    # Other dependencies we need to compile this module
     deps = [
         "//js-client/src/hello-world",
         "//js-client/src/material",
@@ -58,7 +76,7 @@ ts_devserver(
         "npm/node_modules/@angular/material/prebuilt-themes",
     ],
     # Start from the development version of the main
-    entry_module = "gke_bazel_example/js-client/src/main.dev",
+    entry_module = "js-client/src/main.dev",
     scripts = [
         ":module-id.js",
     ],
@@ -77,7 +95,13 @@ ts_devserver(
     deps = ["//js-client/src"],
 )
 
+# This is a Bazel invocation of https://rollupjs.org
+# where we can specify javascript sources to be minified and bundled into
+# a single JS file.
+# See https://bazelbuild.github.io/rules_nodejs/rollup/rollup_bundle.html
 rollup_bundle(
+    # the name of this target we call in both of the production server
+    # targets below, as a dependency
     name = "bundle",
     # These Angular routes may be lazy-loaded at runtime.
     # So we tell Rollup that it can put them in separate JS chunks
@@ -88,15 +112,27 @@ rollup_bundle(
         "js-client/src/hello-world/hello-world.module.ngfactory",
         "js-client/src/todos/todos.module.ngfactory",
     ],
+    # the main class the bundle will execute upon load
+    # (see source in js-client/src/main.prod.ts)
     entry_point = "js-client/src/main.prod",
+    # what source files this rule depends on
     deps = [
         "//js-client/src",
     ],
 )
 
+#################################################################################
+# The following 3 rules do the same thing for separate files
+# index.html asks for 3 static files (zone.js, system.js, and deeppurple-amber.css)
+# and in order to have history-server serve them, we need to copy them out of
+# node_modules and into this directory (js-client/src)
+# These targets are called by either of the production servers below
+# (history_server and nodejs_image)
+# They all use Bazel's built in rule that allows you to create a rule
+# that runs a command specified.
+# See https://docs.bazel.build/versions/master/be/general.html#genrule
+
 # Copy zone.min.js to this package.
-# Needed because the prodserver only loads static files that appear under this
-# package.
 genrule(
     name = "copy_zonejs",
     srcs = ["@npm//node_modules/zone.js:dist/zone.min.js"],
@@ -104,7 +140,7 @@ genrule(
     cmd = "cp $< $@",
 )
 
-# See comment for zonejs above
+# Copy system.js to this package.
 genrule(
     name = "copy_systemjs",
     srcs = ["@npm//node_modules/systemjs:dist/system.js"],
@@ -112,7 +148,7 @@ genrule(
     cmd = "cp $< $@",
 )
 
-# See comment for zonejs above
+# Copy deeppurple-amber.css to this package.
 genrule(
     name = "copy_material_theme",
     srcs = ["@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css"],
@@ -121,6 +157,10 @@ genrule(
 )
 
 # Run a production server with history-server
+# This is only used when we want to run a production server locally
+# The `nodejs_image` rule below is what we use in the k8s deployment
+# See https://github.com/bazelbuild/rules_nodejs/blob/master/internal/history-server/history_server.bzl
+# See this Bazel target exposed as a yarn script in `js-client/package.json`
 history_server(
     name = "prodserver",
     data = [
@@ -134,12 +174,21 @@ history_server(
     ],
 )
 
-####
-
-# Create a NodeJS image that runs history-server as the prod server
+# Compile the Angular sources listed in "data",
+# Expose node_modules for source dependencies
+# The output of this rule is a Docker image
+# when that image is run, it runs `nodejs {entrypoint}`
+# See https://github.com/bazelbuild/rules_docker#nodejs_image
 nodejs_image(
+    # name of the target we call in `js-client/BUILD.bazel`
+    # when we deploy to k8s
     name = "angular_image",
+    # This is a workaround for a regression bug
+    # See https://github.com/bazelbuild/rules_docker/issues/618
     args = [""],
+    # files, or Bazel targets that produce/move files, to build
+    # or move into this image, to be made available when running
+    # the application
     data = [
         "index.html",
         ":bundle",
@@ -149,7 +198,14 @@ nodejs_image(
         "//js-client/src/images:image_assets",
         "//js-client/src/styles:main",
     ],
+    # what script nodejs should run when this image is run
     entry_point = "history-server/modules/cli.js",
+    # which Bazel target should be called to generate our node_modules
     node_modules = "@npm//:node_modules",
+    # these are the arguments passed to the entry_point when the
+    # image is run. ex: `nodejs {entry_point} {templated_args}`
+    # we set ours to "js-client/src" because we want history-server
+    # to serve the index.html in the js-client/src directory.
+    # See https://github.com/mjackson/history-server
     templated_args = ["js-client/src"],
 )

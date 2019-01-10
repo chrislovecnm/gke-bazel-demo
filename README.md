@@ -1,6 +1,6 @@
 # Building & Deploying with Bazel on Kubernetes Engine
 
-<a href="https://console.cloud.google.com/cloudshell/open?cloudshell_git_repo=https://github.com/GoogleCloudPlatform/helmsman-gke-bazel-demo.git&amp;cloudshell_git_branch=oics-blog&amp;cloudshell_working_dir=oics-blog&amp;cloudshell_image=gcr.io/graphite-cloud-shell-images/terraform:latest&amp;open_in_editor=main.tf&amp;cloudshell_print=./motd&amp;cloudshell_tutorial=./tutorial.md"><img src="https://www.datocms-assets.com/2885/1540428436-cloud-button-image.png" alt="open in cloud shell" style="margin: 35px auto;"></a>
+[![Open in Cloud Shell](http://gstatic.com/cloudssh/images/open-btn.svg)](https://console.cloud.google.com/cloudshell/open?git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fhelmsman-gke-bazel-demo.git&page=editor&tutorial=README.md&open_in_editor=.)
 
 [Signup for a free Google Cloud account](https://cloud.google.com/)
 
@@ -32,11 +32,25 @@ One of the many extensions written for Bazel is [a suite of rules to use with Ku
 
 This tutorial also uses [Terraform](https://www.terraform.io/) to setup and teardown the GKE Kubernetes cluster.
 
+Also be sure to read DEVELOPER.md for a more technical introduction, along with background and work-in-progress context for this demo.
+
 ## Architecture
 
 The tutorial will create a Kubernetes Engine cluster with 1 node, and 2 pods deployed to the cluster. One pod has an Angular SPA client (based off [Alex Eagle's Angular Bazel demo](https://github.com/alexeagle/angular-bazel-example), see [Alex's Bazelconf talk as well](https://youtu.be/yBg9zG6ZGb4)) that makes a request to the other pod, a Java Spring Boot app that provides a simple REST API endpoint. The deployment also creates services for both deployments to expose the client and API.
 
 Bazel is used to build each of the containers from source, register the containers in GCR, and then deploy the containers as a pod deployment & service on your GKE cluster.
+
+![deployed architecture](/images/DeployedArchitecture.png)
+
+See DEVELOPER.md for a more detailed explanation on how Bazel targets & packages are structured.
+
+Here's a graph of what happens in Bazel when we call the Bazel command to deploy the Java API:
+
+![deployed architecture](/images/BazelJavaBuildTree.png)
+
+Here's a graph of what happens in Bazel when we call the Bazel command to deploy the JS Client:
+
+![deployed architecture](/images/BazelJSClientBuildTree.png)
 
 ## Prerequisites
 

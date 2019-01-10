@@ -12,10 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Instantiate the Bazel rules we use in this build file.
 load("@build_bazel_rules_typescript//:defs.bzl", "ts_library")
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
+# Use the Typescript compiler to compile file.ts
+# and expose it as a library to use elsewhere.
+# We call this in `js-client/hello-world/BUILD.bazel`
+# in `ng_module`.
 ts_library(
     name = "lib",
     srcs = ["file.ts"],

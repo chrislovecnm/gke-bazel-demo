@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This is a file meant to list our Java Maven dependencies
+# and have them automatically pulled in during the build process
+# without having to declare them one by one.
+# This technique isn't working currently.
+# See notes in DEVELOPER.md for context and further explanation.
+
 options:
   resolverType: "coursier"
 

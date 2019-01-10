@@ -12,14 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Instantiate the Bazel rules we use in this build file.
 load("@angular//:index.bzl", "ng_module")
 
+# The package rule declares this directory as a Bazel package
+# which scopes targets defined in this Build file under this package.
+# The visibility parameter declares which packages can call targets
+# in this package. In this case, we're saying anyone can call these targets.
+# See https://docs.bazel.build/versions/master/be/functions.html#package
 package(default_visibility = ["//visibility:public"])
 
+# Use Angular's ng tool to compile the source code into an NgModule
+# It behaves the same as `ts_library` but with additional attributes
+# See https://github.com/alexeagle/angular-bazel-example/wiki/Angular-rules#compiling-angular-templates
 ng_module(
     name = "material",
+    # the sourcefiles used to compile
     srcs = glob(["*.ts"]),
+    # the tsconfig to pass to the typescript compiler
     tsconfig = "//js-client/src:tsconfig.json",
+    # other dependencies we need to compile this module
     deps = [
         "@angular//packages/core",
         "@angular_material//src/lib:material",

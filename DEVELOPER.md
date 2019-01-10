@@ -38,6 +38,7 @@ Running `bazel run //:second_target` will not only run the rule `java_library` t
 A couple notes about syntax:
 * `//` is the root package
 * `:` is used to denote a target
+* `@` is a reference to a remote repository of targets (ex: a rule of `@angular:foo` references the `foo` target in the `angular` remote repository, not our local package)
 * anything between `//` and `:` are package/directory names
 	* Ex: if you want to call a target named `foo` in a `BUILD.bazel` file in the package/directory of `js-client/src/todos`, it'd be this `//js-client/src/todos:foo`
 
@@ -106,7 +107,7 @@ You can also do a `make destroy_apps` to just destroy the apps that have been de
 
 ## Alpha RBE Support
 
-**This is a work in progress, and likely to be broken.**
+**RBE on GCP is in Alpha, so do not use in production.**
 
 From the official [Bazel Remote Build Execution docs](https://blog.bazel.build/2018/10/05/remote-build-execution.html):
 

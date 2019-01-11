@@ -23,6 +23,7 @@ build --strategy=AngularTemplateCompile=worker
 # which affects the common case of having `tsconfig.json` in the WORKSPACE directory.
 #
 # Instead, you should run `bazel info bazel-bin` to find out where the outputs went.
+
 build --symlink_prefix=dist/
 
 test --test_output=errors

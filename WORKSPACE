@@ -17,32 +17,39 @@
 
 # IMPORTANT: Read DEVELOPER.md and README.md for more context.
 
-####################################
+################################################################################
 # ESModule imports (and TypeScript imports) can be absolute starting with the workspace name.
 # The name of the workspace should match the npm package where we publish, so that these
 # imports also make sense when referencing the published package.
 # The workspace name also maps to your local filesystem when using Bazel.
 # So if you run Bazel, change your workspace name, and run again,
 # none of your previously cached outputs will be available.
+################################################################################
 workspace(name = "gke_bazel_example")
 
 
-####################################
+################################################################################
 # Fetch dependencies for project & Angular client
-####################################
-
-
-# The Bazel buildtools repo contains tools like the BUILD file formatter, buildifier
-# This commit matches the version of buildifier in angular/ngcontainer
-# If you change this, also check if it matches the version in the angular/ngcontainer
-# version in /.circleci/config.yml
-BAZEL_BUILDTOOLS_VERSION = "db073457c5a56d810e46efc18bb93a4fd7aa7b5e"
+################################################################################
 
 # "http_archive" is a Bazel rule that loads Bazel repositories &
 # makes its targets available for execution.
 # It is deprecated however, so we need to manually load it to use it.
 # See https://docs.bazel.build/versions/master/be/workspace.html#http_archive
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# This load statement has Bazel load and evaluate extensions and build files needed for these rules.
+# It also instantiates the rules (ex: "go_rules_dependencies" and "go_register_toolchains")
+http_archive(
+    name = "io_bazel_rules_go",
+    urls = ["https://github.com/bazelbuild/rules_go/releases/download/0.16.5/rules_go-0.16.5.tar.gz"],
+    sha256 = "7be7dc01f1e0afdba6c8eb2b43d2fa01c743be1b9273ab1eaf6c233df078d705",
+)
+load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
+# Fetches any dependencies Go needs.
+go_rules_dependencies()
+# Installs the Go toolchains. See https://github.com/bazelbuild/rules_go/blob/master/go/toolchains.rst#go_register_toolchains
+go_register_toolchains()
 
 # This is a specific Bazel toolchain needed for RBE Alpha support.
 # See DEVELOPER.md for information on RBE.
@@ -65,6 +72,10 @@ http_archive(
     strip_prefix = "bazel-skylib-0.6.0",
     urls = ["https://github.com/bazelbuild/bazel-skylib/archive/0.6.0.tar.gz"],
     )
+
+# The Bazel buildtools repo contains tools like the BUILD file formatter, buildifier
+# This commit matches the version of buildifier in angular/ngcontainer
+BAZEL_BUILDTOOLS_VERSION = "db073457c5a56d810e46efc18bb93a4fd7aa7b5e"
 
 # This repo contains developer tools for Bazel.
 # See https://github.com/bazelbuild/buildtools
@@ -122,12 +133,10 @@ local_repository(
     path = "js-client/node_modules/rxjs/src",
     )
 
-
-####################################
-# Load Bazel rules from our dependencies
-# and run some of their rules to fetch further
-# dependencies
-####################################
+################################################################################
+# Load Bazel rules from our dependencies  and run some of their rules to fetch
+# further dependencies
+################################################################################
 
 # Fetch & register Angular rules dependencies
 # See https://github.com/angular/angular/blob/master/packages/bazel/package.bzl#L11
@@ -171,17 +180,10 @@ yarn_install(
     data = ["//js-client:postinstall.tsconfig.json"],
     )
 
+
+
 # Go is used for the Angular client's dev server.
 # See https://github.com/alexeagle/angular-bazel-example/commit/c416ce749221cfa671fb5199b32e4eb915532489
-
-# This load statement has Bazel load and evaluate extensions and build files needed for these rules.
-# It also instantiates the rules (ex: "go_rules_dependencies" and "go_register_toolchains")
-load("@io_bazel_rules_go//go:def.bzl", "go_rules_dependencies", "go_register_toolchains")
-# Fetches any dependencies Go needs.
-go_rules_dependencies()
-# Installs the Go toolchains. See https://github.com/bazelbuild/rules_go/blob/master/go/toolchains.rst#go_register_toolchains
-go_register_toolchains()
-
 # Load dependencies needed to run Angular e2e tests
 load("@io_bazel_rules_webtesting//web:repositories.bzl", "browser_repositories", "web_test_repositories")
 web_test_repositories()
@@ -210,9 +212,9 @@ ng_setup_workspace()
 load("@angular_material//:index.bzl", "angular_material_setup_workspace")
 angular_material_setup_workspace()
 
-####################################
+################################################################################
 # Kubernetes dependencies
-####################################
+################################################################################
 
 # Load Bazel rule to pull in git repos, rather than http_archives
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -295,9 +297,9 @@ load(
 _nodejs_image_repos()
 
 
-####################################
+################################################################################
 # Java dependencies
-####################################
+################################################################################
 
 # Instantiate the Bazel rule "repositories" in rules_docker/java as "_java_image_repos"
 # See https://github.com/bazelbuild/rules_docker/blob/master/java/image.bzl#L43
@@ -331,7 +333,8 @@ maven_jar(
     artifact="commons-logging:commons-logging:1.2"
     )
 
-# Load the "generated_maven_jars" Bazel rule from our local repo in "java-spring-boot/third_party/generate_workspace.bzl"
+# Load the "generated_maven_jars" Bazel rule from our local repo in
+# "java-spring-boot/third_party/generate_workspace.bzl"
 # This is from https://docs.bazel.build/versions/master/generate-workspace.html
 # See DEVELOPER.md for the different method of migrating Maven dependencies to Bazel
 load("//java-spring-boot/third_party:generate_workspace.bzl", "generated_maven_jars")

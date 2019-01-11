@@ -38,6 +38,7 @@ alias(
 k8s_deploy(
     # the name of our Bazel target we call in the create script
     name = "k8s",
+    # the define cli flag is used for cluster, context and image_chroot
     # the name of our GKE cluster to deploy to
     # this is read from a variable we set in the create script
     cluster = "$(cluster)",

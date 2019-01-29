@@ -76,7 +76,7 @@ ts_devserver(
         "npm/node_modules/@angular/material/prebuilt-themes",
     ],
     # Start from the development version of the main
-    entry_module = "js-client/src/main.dev",
+    entry_module = "gke_bazel_example/js-client/src/main.dev",
     scripts = [
         ":module-id.js",
     ],

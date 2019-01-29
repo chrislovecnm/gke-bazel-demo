@@ -2,7 +2,31 @@
 
 ## Table of Contents
 <!--ts-->
-<!-- TODO -->
+* [Building &amp; Deploying with Bazel on Kubernetes Engine](#building--deploying-with-bazel-on-kubernetes-engine)
+* [Table of Contents](#table-of-contents)
+* [Introduction](#introduction)
+* [Architecture](#architecture)
+* [Prerequisites](#prerequisites)
+   * [Cloud Project](#cloud-project)
+   * [Run Demo in a Google Cloud Shell](#run-demo-in-a-google-cloud-shell)
+   * [Supported Operating Systems](#supported-operating-systems)
+   * [Tools](#tools)
+   * [Configure Authentication](#configure-authentication)
+* [Deployment](#deployment)
+   * [Create the cluster](#create-the-cluster)
+   * [Build &amp; deploy with Bazel](#build--deploy-with-bazel)
+      * [K8s Rules](#k8s-rules)
+* [Validation](#validation)
+* [Teardown](#teardown)
+* [Local Dev](#local-dev)
+* [Maven to Bazel Java Dependencies](#maven-to-bazel-java-dependencies)
+   * [Recommended Option](#recommended-option)
+   * [Deprecated Option](#deprecated-option)
+* [Testing Containers Locally](#testing-containers-locally)
+* [Planter](#planter)
+* [Troubleshooting](#troubleshooting)
+* [Relevant Material](#relevant-material)
+
 <!--te-->
 
 ## Introduction

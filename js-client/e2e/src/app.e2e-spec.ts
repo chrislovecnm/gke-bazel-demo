@@ -14,7 +14,7 @@
 
 import { AppPage } from './app.po';
 
-describe('angular example application', () => {
+describe('Bazel Angular + Java Example', () => {
   let page: AppPage;
 
   beforeEach(() => {

@@ -27,7 +27,7 @@ export class AppPage {
   }
 
   async getParagraphText() {
-    return (await this.waitForElement(element(by.css('div')))).getText();
+    return (await this.waitForElement(element(by.id('greeting')))).getText();
   }
 
   async typeInInput(s: string) {

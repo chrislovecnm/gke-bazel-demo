@@ -9,7 +9,7 @@
         ],
         "rootDirs": [
             ".",
-            "../dist/bin/src",
+            "../dist/bin/src"
         ],
         "experimentalDecorators": true,
         "types": []

@@ -15,10 +15,21 @@
 # Make will use bash instead of sh
 SHELL := /usr/bin/env bash
 
-.PHONY: lint
-lint: check_shell check_shebangs check_python check_golang check_terraform \
-	check_docker check_base_files check_headers check_trailing_whitespace \
-	check_java check_angular
+.PHONY: help
+help:
+	@echo 'Usage:'
+	@echo '    make all        Run terraform and create targets.'
+	@echo '    make terraform  Create or update GCP resources.'
+	@echo '    make create     Create resources with bazel.'
+	@echo '    make teardown   Destroy all GCP resources.'
+	@echo '    make validate   Check that installed resources work as expected.'
+	@echo '    make lint       Check syntax of all scripts.'
+	@echo
+
+# all
+.PHONY: all
+all: terraform create
+	@echo "Done"
 
 .PHONY: terraform
 terraform:
@@ -40,9 +51,14 @@ teardown:
 destroy_apps:
 	@source scripts/destroy_apps.sh
 
-# The .PHONY directive tells make that this isn't a real target and so
-# the presence of a file named 'check_shell' won't cause this target to stop
-# working
+#####################################
+# Linting for CI
+######################################
+.PHONY: lint
+lint: check_shell check_shebangs check_python check_golang check_terraform \
+	check_docker check_base_files check_headers check_trailing_whitespace \
+	check_java check_angular
+
 .PHONY: check_shell
 check_shell:
 	@source test/make.sh && check_shell

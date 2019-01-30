@@ -32,7 +32,7 @@ package(default_visibility = ["//visibility:public"])
 ts_config(
     name = "tsconfig-test",
     src = "tsconfig-test.json",
-    deps = ["//js-client:tsconfig.json"],
+    deps = ["//js-client/src:tsconfig.json"],
 )
 
 # Use Angular's ng tool to compile the source code into an NgModule

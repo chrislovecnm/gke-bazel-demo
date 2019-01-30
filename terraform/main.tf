@@ -33,6 +33,24 @@ resource "google_container_cluster" "primary" {
   initial_node_count = 1
   min_master_version = "${data.google_container_engine_versions.gke_versions.latest_master_version}"
 
+  // Scopes necessary for the nodes to function correctly
+  node_config {
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/compute",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/logging.write",
+      "https://www.googleapis.com/auth/monitoring",
+    ]
+
+    machine_type = "${var.node_machine_type}"
+    image_type   = "COS"
+
+    // (Optional) The Kubernetes labels (key/value pairs) to be applied to each node.
+    labels {
+      status = "poc"
+    }
+  }
+
   master_auth {
     # Best practice
     # Disable basic auth
@@ -48,6 +66,7 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+  # TODO is this setting up ip aliasing properly?
   ip_allocation_policy {
     # Best practice
     # Enable VPC-native IPs for pods and services

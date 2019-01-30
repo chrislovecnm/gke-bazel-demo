@@ -47,6 +47,7 @@ spec:
     spec:
       containers:
       - name: java-spring-boot
+        # the image value is managed and changed by bazel
         image: java_spring_boot:do_not_delete
         imagePullPolicy: Always
         ports:

@@ -42,3 +42,16 @@ You can run the linter simply with `make lint`, however you'll need to install s
 * [checkstyle](http://checkstyle.sourceforge.net/) is used to reformat & lint Java source files. Download https://github.com/checkstyle/checkstyle/releases/download/checkstyle-8.15/checkstyle-8.15-all.jar and update the path (defaults to `~/Downloads`) to the executable in `test/make.sh` on line 84, in the `check_java` function.
 * [shellcheck](https://www.shellcheck.net/) is used to check your shell scripts.
 * [python3](https://www.python.org/downloads/) is required to run the Google OSS header verification script.
+
+The following dependencies were calculated from:
+git clone https://github.com/bazelbuild/migration-tooling.git
+```
+## Generating java deps
+
+TODO document more
+
+```
+bazel run //generate_workspace \
+ --maven_project=$HOME/Workspace/src/github.com/GoogleCloudPlatform/helmsman-gke-bazel-demo/java-spring-boot/ \
+ --artifact=org.springframework.boot:spring-boot-starter-web:${current}.RELEASE --repositories=http://central.maven.org/maven2/
+```

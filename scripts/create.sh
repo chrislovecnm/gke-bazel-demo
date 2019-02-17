@@ -96,7 +96,7 @@ JAVA_CMD=(bazel run
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8 
-  --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk80
+  --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
   //java-spring-boot:k8s.apply)
 
 if [[ $RBE != false ]]; then

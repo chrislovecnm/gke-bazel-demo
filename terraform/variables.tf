@@ -28,3 +28,9 @@ variable "project" {
   description = "The name of the project in which to create the Kubernetes cluster."
   type        = "string"
 }
+
+variable "node_machine_type" {
+  description = "The machine type of the Kubernetes cluster nodes."
+  type        = "string"
+  default     = "n1-standard-1"
+}

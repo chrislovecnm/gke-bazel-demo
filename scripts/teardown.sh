@@ -38,7 +38,7 @@ rm -f "$ROOT/terraform/terraform.tfstate.backup"
 # remove kubectl context & cluster from config
 CONTEXT=$(kubectl config get-contexts -o=name | grep "$(gcloud config get-value project).*gke-bazel-tutorial")
 
-if [[ ! -z $CONTEXT ]]; then
+if [[  -n $CONTEXT ]]; then
   kubectl config delete-context "$CONTEXT"
   kubectl config delete-cluster "$CONTEXT"
   kubectl config unset "users.$CONTEXT"

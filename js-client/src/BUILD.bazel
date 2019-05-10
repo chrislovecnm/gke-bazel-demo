@@ -164,47 +164,13 @@ rollup_bundle(
     ],
 )
 
-# TODO remove these
-#################################################################################
-# The following 3 rules do the same thing for separate files
-# index.html asks for 3 static files (zone.js, system.js, and deeppurple-amber.css)
-# and in order to have history-server serve them, we need to copy them out of
-# node_modules and into this directory (js-client/src)
-# These targets are called by either of the production servers below
-# (history_server and nodejs_image)
-# They all use Bazel's built in rule that allows you to create a rule
-# that runs a command specified.
-# See https://docs.bazel.build/versions/master/be/general.html#genrule
-
-# Copy zone.min.js to this package.
-genrule(
-    name = "copy_zonejs",
-    srcs = ["@npm//node_modules/zone.js:dist/zone.min.js"],
-    outs = ["zone.min.js"],
-    cmd = "cp $< $@",
+filegroup(
+    name = "assets",
+    srcs = [
+        "index.html",
+    ],
 )
 
-# Copy system.js to this package.
-genrule(
-    name = "copy_systemjs",
-    srcs = ["@npm//node_modules/systemjs:dist/system.js"],
-    outs = ["system.js"],
-    cmd = "cp $< $@",
-)
-
-# Copy deeppurple-amber.css to this package.
-genrule(
-    name = "copy_material_theme",
-    srcs = ["@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css"],
-    outs = ["deeppurple-amber.css"],
-    cmd = "cp $< $@",
-)
-
-# Run a production server with history-server
-# This is only used when we want to run a production server locally
-# The `nodejs_image` rule below is what we use in the k8s deployment
-# See https://github.com/bazelbuild/rules_nodejs/blob/master/internal/history-server/history_server.bzl
-# See this Bazel target exposed as a yarn script in `js-client/package.json`
 web_package(
     name = "prodapp",
     additional_root_paths = _ROOT_DIRS + [
@@ -221,30 +187,26 @@ web_package(
     ],
     data = [
         ":bundle",
-        #"//src/assets",
+        "//js-client/src/images:image_assets",
+        "//js-client/src/styles:main",
         # Include polyfills that will be requested by old browsers
         "@npm//node_modules/systemjs:dist/system.js",
         "@npm//node_modules/core-js:client/core.min.js",
-        "index.html",
+        "//js-client/src:assets",
     ],
     # <script> and <link> tags will be automatically injected into this index.
     #index_html = "//src/example:assets",
-    index_html = "index.html"
+    index_html = "//js-client/src:assets"
 )
 
+# Run a production server with history-server
+# This is only used when we want to run a production server locally
+# The `nodejs_image` rule below is what we use in the k8s deployment
+# See https://github.com/bazelbuild/rules_nodejs/blob/master/internal/history-server/history_server.bzl
+# See this Bazel target exposed as a yarn script in `js-client/package.json`
 history_server(
     name = "prodserver",
     data = [":prodapp"],
-
-    #data = [
-    #   "index.html",
-    #   ":bundle",
-    #   ":copy_material_theme",
-    #   ":copy_systemjs",
-    #   ":copy_zonejs",
-    #   "//js-client/src/images:image_assets",
-    #   "//js-client/src/styles:main",
-    #,
 )
 
 # Compile the Angular sources listed in "data",

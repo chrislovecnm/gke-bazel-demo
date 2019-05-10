@@ -81,8 +81,8 @@ function check_shell() {
 function check_java() {
   echo "Formatting Java"
   find . -name "*.java" -not -path "./planter/*" -exec sh -c \
-    'java -jar ~/Downloads/checkstyle-8.15-all.jar -c /google_checks.xml "$1"'\
-		-x {} \;
+    ""java -jar ~/Downloads/checkstyle-8.15-all.jar -c /google_checks.xml "$1"""\
+	-x {} \;
 }
 
 # This function runs the `yarn buildifier` command.

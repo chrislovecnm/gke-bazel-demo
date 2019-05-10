@@ -97,7 +97,7 @@ JAVA_CMD=(bazel run
   --define "repo=${REPO}"
   "--host_java_toolchain="@bazel_tools//tools/jdk:toolchain_hostjdk8
   "--java_toolchain="@bazel_tools//tools/jdk:toolchain_hostjdk8
-  #--host_java_toolchain='@bazel_tools//tools/jdk:toolchain_hostjdk8'
+  #--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
   #--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
   //java-spring-boot:k8s.apply)
 

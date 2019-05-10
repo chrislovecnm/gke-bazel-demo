@@ -28,4 +28,3 @@ alias(
     name = "tsconfig.json",
     actual = "//js-client/src:tsconfig.json",
 )
-

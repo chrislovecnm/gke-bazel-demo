@@ -115,12 +115,10 @@ yarn_install(
     name = "npm",
     package_json = "//js-client:package.json",
     yarn_lock = "//js-client:yarn.lock",
-    data = ["//js-client:postinstall.tsconfig.json"],
-    # TODO will need to update this
-    # data = [
+    data = [
        # Needed because this tsconfig file is used in the "postinstall" script.
-     #  "//:angular-metadata.tsconfig.json",
-    #],
+       "//:angular-metadata.tsconfig.json",
+    ],
 )
 
 # Install all bazel dependencies of our npm packages
@@ -232,12 +230,6 @@ k8s_defaults(
     name = "k8s_service",
     kind = "service",
     namespace = "default",
-    )
-
-# Exposes some Bazel rules to do a `npm install` on the package.json file in "js-client" later
-# See https://github.com/bazelbuild/rules_nodejs/blob/master/internal/node/node_repositories.bzl#L469
-node_repositories(
-    package_json = ["//js-client:package.json"]
     )
 
 # Instantiate the Bazel rule "repositories" in rules_docker/nodejs as "_nodejs_image_repos"

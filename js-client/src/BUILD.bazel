@@ -227,9 +227,6 @@ nodejs_image(
     data = [
         "index.html",
         ":bundle",
-        ":copy_material_theme",
-        ":copy_systemjs",
-        ":copy_zonejs",
         "//js-client/src/images:image_assets",
         "//js-client/src/styles:main",
     ],

@@ -13,9 +13,10 @@
 # limitations under the License.
 
 # Instantiate the Bazel rules we use in this build file.
-load("@angular//:index.bzl", "ng_module")
-load("@build_bazel_rules_typescript//:defs.bzl", "ts_library", "ts_web_test_suite")
+load("@npm_angular_bazel//:index.bzl", "ng_module")
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 load("@io_bazel_rules_sass//:defs.bzl", "sass_binary")
+load("@npm_bazel_karma//:defs.bzl", "ts_web_test_suite")
 
 # The package rule declares this directory as a Bazel package
 # which scopes targets defined in this Build file under this package.
@@ -34,6 +35,12 @@ sass_binary(
     # the dependencies needed to compile
     deps = ["//js-client/src/styles:shared"],
 )
+
+# We don't import from these, but the generated ngfactory code will
+NG_FACTORY_ADDED_IMPORTS = [
+    "@npm//@angular/cdk",
+    "@npm//@angular/material",
+]
 
 # Use Angular's ng tool to compile the source code into an NgModule
 # It behaves the same as `ts_library` but with additional attributes
@@ -54,12 +61,12 @@ ng_module(
     # the tsconfig to pass to the typescript compiler
     tsconfig = "//js-client/src:tsconfig.json",
     # other dependencies we need to compile this module
-    deps = [
+    deps = NG_FACTORY_ADDED_IMPORTS + [
         "//js-client/src/lib",
         "//js-client/src/material",
-        "@angular//packages/core",
-        "@angular//packages/forms",
-        "@angular//packages/router",
+        "@npm//@angular/core",
+        "@npm//@angular/forms",
+        "@npm//@angular/router",
     ],
 )
 
@@ -69,13 +76,13 @@ ts_library(
     name = "test_lib",
     testonly = 1,
     srcs = glob(["*.spec.ts"]),
+    tsconfig = "//js-client/src:tsconfig-test",
     deps = [
         ":hello-world",
-        "@angular//packages/core",
-        "@angular//packages/core/testing",
-        "@angular//packages/platform-browser",
-        "@angular//packages/platform-browser-dynamic/testing",
-        "@angular//packages/platform-browser/animations",
+        "@npm//@angular/core",
+        "@npm//@angular/platform-browser",
+        "@npm//@angular/platform-browser-dynamic",
+        "@npm//@angular/animations",
         "@npm//@types/jasmine",
         "@npm//@types/node",
     ],

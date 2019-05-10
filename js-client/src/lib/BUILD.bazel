@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Instantiate the Bazel rules we use in this build file.
-load("@build_bazel_rules_typescript//:defs.bzl", "ts_library")
+load("@npm_bazel_typescript//:defs.bzl", "ts_library")
 
 # The package rule declares this directory as a Bazel package
 # which scopes targets defined in this Build file under this package.

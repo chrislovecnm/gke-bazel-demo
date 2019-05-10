@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Instantiate the Bazel rules we use in this build file.
-load("@angular//:index.bzl", "ng_module")
+load("@npm_angular_bazel//:index.bzl", "ng_module")
 load("@io_bazel_rules_sass//:defs.bzl", "sass_binary")
 
 # The package rule declares this directory as a Bazel package
@@ -58,10 +58,10 @@ ng_module(
     deps = [
         "//js-client/src/lib",
         "//js-client/src/material",
-        "@angular//packages/common",
-        "@angular//packages/core",
-        "@angular//packages/forms",
-        "@angular//packages/router",
-        "@rxjs",
+        "@npm//@angular/common",
+        "@npm//@angular/core",
+        "@npm//@angular/forms",
+        "@npm//@angular/router",
+        "@npm//rxjs",
     ],
 )

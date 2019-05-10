@@ -7,7 +7,6 @@
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
-      "prefix": "app",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
@@ -17,20 +16,20 @@
         "build": {
           "builder": "@angular/bazel:build",
           "options": {
-            "targetLabel": "//src:prodapp",
+            "targetLabel": "//js-client/src:prodapp",
             "bazelCommand": "build"
           }
         },
         "serve": {
           "builder": "@angular/bazel:build",
           "options": {
-            "targetLabel": "//src:devserver",
+            "targetLabel": "//js-client/src:devserver",
             "bazelCommand": "run",
             "watch": true
           },
           "configurations": {
             "production": {
-              "targetLabel": "//src:prodserver"
+              "targetLabel": "//js-client/src:prodserver"
             }
           }
         },
@@ -44,7 +43,7 @@
           "builder": "@angular/bazel:build",
           "options": {
             "bazelCommand": "test",
-            "targetLabel": "//src/app/..."
+            "targetLabel": "//src/hello-world/..."
           }
         },
         "lint": {
@@ -70,11 +69,11 @@
           "builder": "@angular/bazel:build",
           "options": {
             "bazelCommand": "test",
-            "targetLabel": "//e2e:devserver_test"
+            "targetLabel": "//js-client/e2e:devserver_test"
           },
           "configurations": {
             "production": {
-              "targetLabel": "//e2e:prodserver_test"
+              "targetLabel": "//js-client/e2e:prodserver_test"
             }
           }
         },

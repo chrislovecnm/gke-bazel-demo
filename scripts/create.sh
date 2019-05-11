@@ -22,7 +22,6 @@
 set -o errexit
 set -o nounset
 set -o pipefail
-set -x
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # shellcheck source=/dev/null
@@ -32,6 +31,9 @@ PROJECT=$(gcloud config get-value project)
 CONTEXT=$(kubectl config get-contexts -o=name | \
 	grep "$PROJECT.*gke-bazel-tutorial")
 REPO=gcr.io/$PROJECT
+
+## Enabling docker gcp helper
+gcloud auth configure-docker
 
 
 #########################
@@ -135,7 +137,7 @@ Check on the service and re-run 'make create'."
 	exit 1
 fi
 
-sed -i '.bak' "s/localhost:8080/${API_IP}/g" \
+sed -i.bak -e "s/localhost:8080/${API_IP}/g" \
 	"js-client/src/todos/todos.service.ts"
 
 echo "Updated Angular client to speak to ${API_IP}"

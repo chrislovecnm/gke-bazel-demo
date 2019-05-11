@@ -164,12 +164,12 @@ rollup_bundle(
     ],
 )
 
-filegroup(
-    name = "assets",
-    srcs = [
-        "index.html",
-    ],
-)
+#filegroup(
+#    name = "assets",
+#    srcs = [
+#        "index.html",
+#    ],
+#)
 
 web_package(
     name = "prodapp",
@@ -192,11 +192,12 @@ web_package(
         # Include polyfills that will be requested by old browsers
         "@npm//node_modules/systemjs:dist/system.js",
         "@npm//node_modules/core-js:client/core.min.js",
-        "//js-client/src:assets",
+        "index.html",
     ],
     # <script> and <link> tags will be automatically injected into this index.
     #index_html = "//src/example:assets",
-    index_html = "//js-client/src:assets"
+    # FIXME this should work
+    index_html = ":index.html"
 )
 
 # Run a production server with history-server
@@ -207,7 +208,14 @@ web_package(
 history_server(
     name = "prodserver",
     data = [":prodapp"],
+
+    templated_args = [
+        "-a",
+        "src/prodapp",
+    ],
 )
+
+
 
 # Compile the Angular sources listed in "data",
 # Expose node_modules for source dependencies

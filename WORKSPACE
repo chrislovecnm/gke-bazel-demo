@@ -135,7 +135,6 @@ load("@npm_bazel_karma//:package.bzl", "rules_karma_dependencies")
 
 rules_karma_dependencies()
 
-# Go is used for the Angular client's dev server.
 # Load dependencies needed to run Angular e2e tests
 # Setup the rules_webtesting toolchain
 load("@io_bazel_rules_webtesting//web:repositories.bzl", "web_test_repositories")
@@ -180,30 +179,40 @@ http_archive(
 
 # Docker rules for Bazel, needed to containerize our applications
 # See https://github.com/bazelbuild/rules_docker
+# Download the rules_docker repository at release v0.7.0
 http_archive(
     name = "io_bazel_rules_docker",
-    sha256 = "c0e9d27e6ca307e4ac0122d3dd1df001b9824373fb6fb8627cd2371068e51fef",
-    strip_prefix = "rules_docker-0.6.0",
-    urls = ["https://github.com/bazelbuild/rules_docker/archive/v0.6.0.tar.gz"],
-    )
+    sha256 = "aed1c249d4ec8f703edddf35cbe9dfaca0b5f5ea6e4cd9e83e99f3b0d1136c3d",
+    strip_prefix = "rules_docker-0.7.0",
+    urls = ["https://github.com/bazelbuild/rules_docker/archive/v0.7.0.tar.gz"],
+)
 
 # Instantiate the "repositories" Bazel rule in rules_docker as "container_repositories"
 load(
-    "@io_bazel_rules_docker//container:container.bzl",
+    "@io_bazel_rules_docker//repositories:repositories.bzl",
     container_repositories = "repositories",
-    )
+)
 
 # Download dependencies for container rules
 # See https://github.com/bazelbuild/rules_docker/blob/master/container/container.bzl#L79
 container_repositories()
 
+
 # Download the K8s Bazel rules from GitHub
 # See https://github.com/bazelbuild/rules_k8s
+#git_repository(
+#    name = "io_bazel_rules_k8s",
+#    commit = "bc9a60a1250af9856c4797aebd79bb08bee370f5",
+#    remote = "https://github.com/bazelbuild/rules_k8s.git",
+#    )
+
+# This requires rules_docker to be fully instantiated before
+# it is pulled in.
 git_repository(
     name = "io_bazel_rules_k8s",
-    commit = "bc9a60a1250af9856c4797aebd79bb08bee370f5",
+    commit = "fc1be8f88c64db046b3672c69be1ae80b2d4f873",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
-    )
+)
 
 # Load a couple rules we need from the K8s Bazel repo
 load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")

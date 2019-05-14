@@ -92,12 +92,10 @@ ts_library(
 # See https://github.com/bazelbuild/rules_typescript
 ts_web_test_suite(
     name = "test",
-    srcs = ["@npm//node_modules/tslib:tslib.js"],
     # do not sort
     bootstrap = [
         "@npm//node_modules/zone.js:dist/zone-testing-bundle.js",
         "@npm//node_modules/reflect-metadata:Reflect.js",
-        "//js-client/src:module-id.js",
     ],
     browsers = [
         "@io_bazel_rules_webtesting//browsers:chromium-local",
@@ -105,7 +103,11 @@ ts_web_test_suite(
         # See https://github.com/bazelbuild/rules_typescript/issues/296
         #"@io_bazel_rules_webtesting//browsers:firefox-local",
     ],
+    runtime_deps = [
+        "//js-client/src:initialize_testbed",
+    ],
     deps = [
         ":test_lib",
+        "//js-client/src:rxjs_umd_modules",
     ],
 )

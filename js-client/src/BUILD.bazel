@@ -214,29 +214,34 @@ web_package(
     name = "prodapp",
     additional_root_paths = _ROOT_DIRS + [
         # In production mode we also serve some polyfills
-        "npm/node_modules/core-js/client",
-        "npm/node_modules/systemjs/dist",
+        "npm/node_modules/zone.js/dist",
+        "npm/node_modules/systemjs/dist"
+        # "npm/node_modules/core-js/client",
     ],
     # do not sort
-    assets = _ASSETS + [
+    #assets = _ASSETS + [
+    assets =  [
         # For differential loading, we supply both an ESModule entry point and an es5 entry point
         # The injector will put two complimentary script tags in the example.html
+        # "@npm//node_modules/zone.js:dist/zone.min.js",
+        #"@npm//node_modules/systemjs:dist/system.js",
+        #":bundle.min.js",
+        #":bundle.min.es2015.js",
+        # do not sort
+        "@npm//node_modules/zone.js:dist/zone.min.js",
+        "@npm//node_modules/systemjs:dist/system.js",
         ":bundle.min.js",
-        ":bundle.min.es2015.js",
     ],
     data = [
         ":bundle",
+        "favicon.ico",
         "//js-client/src/images:image_assets",
         "//js-client/src/styles:main",
-        # Include polyfills that will be requested by old browsers
-        "@npm//node_modules/systemjs:dist/system.js",
-        "@npm//node_modules/core-js:client/core.min.js",
-        "index.html",
     ],
     # <script> and <link> tags will be automatically injected into this index.
     #index_html = "//src/example:assets",
     # FIXME this should work
-    index_html = ":assets"
+    index_html = "//js-client/src/prod:prod_assets",
 )
 
 # Run a production server with history-server
@@ -250,11 +255,9 @@ history_server(
 
     templated_args = [
         "-a",
-        "src/prodapp",
+        "src/prodapp/prod",
     ],
 )
-
-
 
 # Compile the Angular sources listed in "data",
 # Expose node_modules for source dependencies
@@ -271,20 +274,16 @@ nodejs_image(
     # files, or Bazel targets that produce/move files, to build
     # or move into this image, to be made available when running
     # the application
-    data = [
-        "index.html",
-        ":bundle",
-        "//js-client/src/images:image_assets",
-        "//js-client/src/styles:main",
-    ],
+    data = [":prodapp"],
     # what script nodejs should run when this image is run
     entry_point = "history-server/modules/cli.js",
     # which Bazel target should be called to generate our node_modules
-    node_modules = "@npm//:node_modules",
+    node_modules = "@history-server_runtime_deps//:node_modules",
     # these are the arguments passed to the entry_point when the
     # image is run. ex: `nodejs {entry_point} {templated_args}`
     # we set ours to "js-client/src" because we want history-server
     # to serve the index.html in the js-client/src directory.
     # See https://github.com/mjackson/history-server
-    templated_args = ["js-client/src"],
+    templated_args = ["js-client/src/prodapp"],
+    tags = ["local"],
 )

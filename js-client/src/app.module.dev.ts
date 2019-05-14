@@ -22,8 +22,6 @@ const map = routes.reduce((a, r) => {
 
 export class MyLoader extends NgModuleFactoryLoader {
   load(id: string) {
-    console.log(map)
-    console.log(id)
     const res = map[id];
     if (!res) {
       throw new Error(`Unrecognized route id ${id}`);

@@ -91,13 +91,15 @@ ts_library(
 ng_module(
     name = "src",
     # the sourcefiles used to compile
-    srcs = [
-      "main.dev.ts",
-      "main.prod.ts",
-      "app.module.ts",
-      "app-routing.module.ts",
-      "app.component.ts",
-    ],
+    srcs = glob(
+      include = ["*.ts", "**/*.ts"],
+      exclude = [
+          "**/*.spec.ts",
+          "main.ts",
+          "test.ts",
+          "initialize_testbed.ts",
+      ],
+    ),
     # the HTML and Sass targets that output assets
     # we use in this module
     assets = [
@@ -141,29 +143,31 @@ ts_devserver(
     ],
     # Start from the development version of the main
     entry_module = "gke_bazel_example/js-client/src/main.dev",
-    scripts = [
-        ":module-id.js",
-        "@npm//node_modules/tslib:tslib.js",
-        ":rxjs_umd_modules",
-        ":require.config.js",
-        # We are manaully adding a browserify generated named UMD date-fns bundle here that
-        # was generated in our package.json postinstall step. This is a temporary work-around
-        # to get commonjs modules & npm packages working with ts_devserver. A more ergonomic
-        # solution is planned for Angular v8. See https://github.com/bazelbuild/rules_nodejs/issues/646.
-        "@npm//node_modules/date-fns:date-fns.umd.js",
-    ],
-    # This is the URL we'll point our <script> tag at
-    serving_path = "/bundle.min.js",
+    scripts = [],
     # Serve these files in addition to the JavaScript bundle
     # TODO cleanup and just use assests
     static_files = _ASSETS + [
         "@npm//node_modules/tslib:tslib.js",
-        "//js-client/src/styles:main.css",
+        # TODO move these to _ASSETS??
         "//js-client/src/images:image_assets",
         "index.html",
     ],
     # Tell Bazel to build the sources first
-    deps = ["//js-client/src"],
+    deps = [
+        "//js-client/src",
+        "@npm//node_modules/tslib:tslib.js",
+        "@npm//node_modules/@angular/core:bundles/core.umd.js",
+        "@npm//node_modules/@angular/common:bundles/common.umd.js",
+        "@npm//node_modules/@angular/common:bundles/common-http.umd.js",
+        "@npm//node_modules/@angular/router:bundles/router.umd.js",
+        "@npm//node_modules/@angular/forms:bundles/forms.umd.js",
+        "@npm//node_modules/@angular/animations:bundles/animations.umd.js",
+        "@npm//node_modules/@angular/animations:bundles/animations-browser.umd.js",
+        "@npm//node_modules/@angular/router:router.ngfactory.js",
+        "@npm//node_modules/@angular/platform-browser:bundles/platform-browser.umd.js",
+        "@npm//node_modules/@angular/platform-browser:bundles/platform-browser-animations.umd.js",
+        ":rxjs_umd_modules",
+    ],
 )
 
 # This is a Bazel invocation of https://rollupjs.org

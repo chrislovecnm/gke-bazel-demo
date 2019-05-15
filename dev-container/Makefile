@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VERSION?=0.25.0
+VERSION?=0.25.2
 PROJECT_ID?=pso-examples
 PROJECT?=gcr.io/${PROJECT_ID}
 
@@ -21,7 +21,7 @@ all: build
 build:
 	docker build --no-cache=true --compress --squash -t ${PROJECT}/planter-kubectl:${VERSION} .
 
-push: 
+push: build
 	docker push ${PROJECT}/planter-kubectl:${VERSION}
 
 .PHONY: all build push

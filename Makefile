@@ -39,6 +39,10 @@ terraform:
 create:
 	@source scripts/create.sh
 
+.PHONY: rbe-create
+rbe-create:
+	@source scripts/create-rbe.sh
+
 .PHONY: validate
 validate:
 	@source scripts/validate.sh

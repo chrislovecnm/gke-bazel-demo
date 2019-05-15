@@ -39,15 +39,18 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 # This is a specific Bazel toolchain needed for RBE Alpha support.
 # See DEVELOPER.md for information on RBE.
+
 http_archive(
-    name = "bazel_toolchains",
-    sha256 = "67335b3563d9b67dc2550b8f27cc689b64fadac491e69ce78763d9ba894cc5cc",
-    strip_prefix = "bazel-toolchains-cddc376d428ada2927ad359211c3e356bd9c9fbb",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-toolchains/archive/cddc376d428ada2927ad359211c3e356bd9c9fbb.tar.gz",
-        "https://github.com/bazelbuild/bazel-toolchains/archive/cddc376d428ada2927ad359211c3e356bd9c9fbb.tar.gz",
-    ],
+  name = "bazel_toolchains",
+  urls = [
+    "https://github.com/bazelbuild/bazel-toolchains/archive/92dd8a7.tar.gz"
+  ],
+  strip_prefix = "bazel-toolchains-92dd8a7",
+  sha256 = "3a6ffe6dd91ee975f5d5bc5c50b34f58e3881dfac59a7b7aba3323bd8f8571a8",
 )
+
+load("@bazel_toolchains//rules:rbe_repo.bzl", "rbe_autoconfig")
+rbe_autoconfig(name = "rbe_default")
 
 # Skylib provides functions for writing custom Bazel rules.
 # We use custom bazel rules in this demo, so we need skylib.
@@ -197,7 +200,6 @@ load(
 # See https://github.com/bazelbuild/rules_docker/blob/master/container/container.bzl#L79
 container_repositories()
 
-
 # Download the K8s Bazel rules from GitHub
 # See https://github.com/bazelbuild/rules_k8s
 #git_repository(
@@ -250,23 +252,6 @@ load(
 
 # Download dependencies for running NodeJS image Bazel rules
 _nodejs_image_repos()
-
-# TODO need to update this
-####################################################
-# Support creating Docker images for our node apps #
-####################################################
-
-#http_archive(
-#    name = "io_bazel_rules_docker",
-#    sha256 = "aed1c249d4ec8f703edddf35cbe9dfaca0b5f5ea6e4cd9e83e99f3b0d1136c3d",
-#    strip_prefix = "rules_docker-0.7.0",
-#    urls = ["https://github.com/bazelbuild/rules_docker/archive/v0.7.0.tar.gz"],
-#)
-
-#load("@io_bazel_rules_docker//nodejs:image.bzl", nodejs_image_repos = "repositories")
-
-#nodejs_image_repos()
-
 
 ################################################################################
 # Java dependencies

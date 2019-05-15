@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/k8s-testimages/planter:0.25.0
+FROM gcr.io/k8s-testimages/planter:0.25.2
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -32,9 +32,8 @@ RUN \
  && apt-get update && apt-get install -y apt-transport-https gnupg2 \
  && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
-#&& CLOUD_SDK_REPO="cloud-sdk-stretch" \
-# && echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
-# && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+&& CLOUD_SDK_REPO="cloud-sdk-stretch" \
+ && echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+ && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && apt-get update \
-# && apt-get install -y kubectl google-cloud-sdk
- && apt-get install -y kubectl
+ && apt-get install -y kubectl google-cloud-sdk

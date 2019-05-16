@@ -13,22 +13,31 @@
 // limitations under the License.
 
 import {NgModule} from '@angular/core';
-import {RouterModule, Routes} from '@angular/router';
-
-export const helloModuleId =
-    './hello-world/hello-world.module#HelloWorldModule';
-export const todosModuleId = './todos/todos.module#TodosModule';
+import {PreloadAllModules, RouterModule, Routes} from '@angular/router';
 
 // These are lazy-loaded routes - note that we don't import the modules here
 // to avoid having an eager dependency on them.
-export const routes: Routes = [
-  {path: 'hello-world', pathMatch: 'full', loadChildren: helloModuleId},
-  {path: 'todos', pathMatch: 'full', loadChildren: todosModuleId},
+const routes: Routes = [
+  {
+    path: 'hello',
+    pathMatch: 'full',
+    loadChildren:  import('./hello-world/hello-world.module.ngfactory').then(m => m.HelloWorldModuleNgFactory)
+  },
+  {
+    path: 'todos',
+    pathMatch: 'full',
+    loadChildren: () => import('./todos/todos.module.ngfactory').then(m => m.TodosModuleNgFactory)
+  },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, {
+    // TODO: maybe set this based on devmode?
+    enableTracing: true,
+    // preloadingStrategy: PreloadAllModules,
+  })],
   exports: [RouterModule],
 })
+
 export class AppRoutingModule {
 }

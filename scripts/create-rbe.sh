@@ -40,11 +40,6 @@ gcloud auth configure-docker
 # (See DEVELOPER.md)
 #########################
 
-#RBE_FLAGS=(
-#  "--config=remote"
-#  "--remote_instance_name=projects/$PROJECT/instances/default_instance"
-#  "--project_id=$PROJECT"
-#)
 
 #if  [[ $RBE != false ]]; then
 #	# Issue some warnings about RBE on GCP
@@ -92,8 +87,8 @@ gcloud auth configure-docker
 # Use Bazel to compile, build, and deploy the Java Spring Boot API
 JAVA_CMD=(bazel
   --bazelrc=bazel-0.25.0.bazelrc
-	run
-	--config remote
+  run
+  --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //java-spring-boot:k8s.apply)
@@ -136,8 +131,8 @@ echo "Updated Angular client to speak to ${API_IP}"
 # Use Bazel to compile, build, and deploy the Angular client
 JS_CMD=(bazel
   --bazelrc=bazel-0.25.0.bazelrc
-	run
-	--config remote
+  run
+  --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //js-client:k8s.apply)

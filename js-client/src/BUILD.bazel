@@ -18,9 +18,11 @@ load("@build_bazel_rules_nodejs//:defs.bzl", "history_server", "rollup_bundle")
 load("@npm_bazel_typescript//:defs.bzl", "ts_config", "ts_devserver", "ts_library")
 load("@build_bazel_rules_nodejs//internal/web_package:web_package.bzl", "web_package")
 load("@io_bazel_rules_sass//:defs.bzl", "sass_binary")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
+load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
+
 # load("//js-client/src:npm-linux.bzl", "linux_node_modules")
 
-load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 
 # The package rule declares this directory as a Bazel package
 # which scopes targets defined in this Build file under this package.
@@ -114,7 +116,9 @@ ng_module(
         "//js-client/src/material",
         "//js-client/src/todos",
         "@npm//@angular/core",
+        "@npm//@angular/platform-browser",
         "@npm//@angular/router",
+        "@npm//@ngrx/store",
     ],
 )
 
@@ -136,7 +140,6 @@ ts_devserver(
     # serve these files rooted at /
     # TODO cleanup, we can use use _ROOT_DIRS
     additional_root_paths = _ROOT_DIRS + [
-        "npm/node_modules/zone.js/dist",
         "npm/node_modules/tslib",
         "npm/node_modules/@angular/material/prebuilt-themes",
         "@npm//node_modules/@ngrx/store:bundles/store.umd.min.js",
@@ -214,21 +217,29 @@ web_package(
     name = "prodapp",
     additional_root_paths = _ROOT_DIRS + [
         # In production mode we also serve some polyfills
-        "npm/node_modules/zone.js/dist",
+        "npm/node_modules/core-js/client",
         "npm/node_modules/systemjs/dist"
-        # "npm/node_modules/core-js/client",
     ],
     # do not sort
     #assets = _ASSETS + [
-    assets =  [
+    assets = [
+        # This label references an output of the "styles" sass_binary above.
+        "//js-client/src/styles:main",
+
+        # Directly reference a file that came from @angular/material npm package
+        "@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css",
+
+
+        # We load zone.js outside the bundle. That's because it's a "pollyfill"
+        # which speculates that such features might be available in a browser.
+        # Also it's tricky to configure dead code elimination to understand that
+        # zone.js is used, given that we don't have any import statement that
+        # imports from it.
+        "@npm//node_modules/zone.js:dist/zone.min.js",
+
         # For differential loading, we supply both an ESModule entry point and an es5 entry point
         # The injector will put two complimentary script tags in the example.html
-        # "@npm//node_modules/zone.js:dist/zone.min.js",
-        #"@npm//node_modules/systemjs:dist/system.js",
-        #":bundle.min.js",
         # do not sort
-        "@npm//node_modules/zone.js:dist/zone.min.js",
-        "@npm//node_modules/systemjs:dist/system.js",
         ":bundle.min.js",
         ":bundle.min.es2015.js",
     ],
@@ -237,11 +248,13 @@ web_package(
         "favicon.ico",
         "//js-client/src/images:image_assets",
         "//js-client/src/styles:main",
+        # Include polyfills that will be requested by old browsers
+        "@npm//node_modules/systemjs:dist/system.js",
+        "@npm//node_modules/core-js:client/core.min.js",
+        "//js-client/src:assets",
     ],
     # <script> and <link> tags will be automatically injected into this index.
-    #index_html = "//src/example:assets",
-    # FIXME this should work
-    index_html = "//js-client/src/example:prod_assets",
+    index_html = "//js-client/src:assets",
 )
 
 # Run a production server with history-server
@@ -255,7 +268,7 @@ history_server(
 
     templated_args = [
         "-a",
-        "src/prodapp/prod",
+        "src/prodapp",
     ],
 )
 
@@ -271,10 +284,7 @@ history_server(
 nodejs_image(
     # name of the target we call in `js-client/BUILD.bazel`
     # when we deploy to k8s
-    name = "angular_image",
-    # This is a workaround for a regression bug
-    # See https://github.com/bazelbuild/rules_docker/issues/618
-    args = [""],
+    name = "nodejs_image",
     # files, or Bazel targets that produce/move files, to build
     # or move into this image, to be made available when running
     # the application
@@ -285,8 +295,17 @@ nodejs_image(
     node_modules = "@history-server_runtime_deps//:node_modules",
     # these are the arguments passed to the entry_point when the
     # image is run. ex: `nodejs {entry_point} {templated_args}`
-    # we set ours to "js-client/src" because we want history-server
-    # to serve the index.html in the js-client/src directory.
+    # we set ours to "js-client/src/prodapp" because we want history-server
+    # to serve from the js-client/src/prodapp directory.
     # See https://github.com/mjackson/history-server
     templated_args = ["js-client/src/prodapp"],
+)
+
+container_image(
+    name = "angular_image",
+    base = ":nodejs_image",
+    # Actions created by this rule are I/O-bound,
+    # so there is no benefit to running them remotely
+    # tags = ["local"],
+    workdir = "/app/js-client/src/nodejs_image.binary.runfiles/gke_bazel_example",
 )

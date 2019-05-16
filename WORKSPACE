@@ -55,7 +55,7 @@ rbe_autoconfig(name = "rbe_default")
 # Skylib provides functions for writing custom Bazel rules.
 # We use custom bazel rules in this demo, so we need skylib.
 # See https://github.com/bazelbuild/bazel-skylib
-# TODO - we need to update this
+# TODO - we need to update this, but scala rules may not be happy
 http_archive(
     name = "bazel_skylib",
     sha256 = "eb5c57e4c12e68c0c20bc774bfbc60a568e800d025557bc4ea022c6479acc867",
@@ -89,14 +89,6 @@ http_archive(
     strip_prefix = "rules_sass-1.17.2",
     url = "https://github.com/bazelbuild/rules_sass/archive/1.17.2.zip",
 )
-# This local_repository rule is needed to prevent `bazel build ...` from
-# drilling down into the @rxjs workspace BUILD files in node_modules/rxjs/src.
-# In the future this will no longer be needed.
-# See https://github.com/alexeagle/angular-bazel-example/commit/09eab9c6c5ac41c73d0c77ab1b9d84adf522632e
-#local_repository(
-#    name = "ignore_node_modules_rxjs",
-#    path = "js-client/node_modules/rxjs/src",
-#    )
 
 ################################################################################
 # Load Bazel rules from our dependencies  and run some of their rules to fetch
@@ -107,7 +99,7 @@ http_archive(
 load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "yarn_install")
 
 # The minimum bazel version to use with this example repo is 0.21.0
-check_bazel_version("0.21.0")
+check_bazel_version("0.24.0")
 
 # With the yarn_install or npm_install repository rules, Bazel will setup your
 # node_modules for you in an external workspace named after the repository rule.
@@ -164,7 +156,6 @@ load("@io_bazel_rules_sass//sass:sass_repositories.bzl", "sass_repositories")
 
 sass_repositories()
 
-
 ################################################################################
 # Kubernetes dependencies
 ################################################################################
@@ -199,14 +190,6 @@ load(
 # Download dependencies for container rules
 # See https://github.com/bazelbuild/rules_docker/blob/master/container/container.bzl#L79
 container_repositories()
-
-# Download the K8s Bazel rules from GitHub
-# See https://github.com/bazelbuild/rules_k8s
-#git_repository(
-#    name = "io_bazel_rules_k8s",
-#    commit = "bc9a60a1250af9856c4797aebd79bb08bee370f5",
-#    remote = "https://github.com/bazelbuild/rules_k8s.git",
-#    )
 
 # This requires rules_docker to be fully instantiated before
 # it is pulled in.
@@ -269,6 +252,7 @@ _java_image_repos()
 
 # Download the Bazel Scala rules from Github
 # See https://github.com/bazelbuild/rules_scala
+# TODO update this, but there were errors
 git_repository(
     name = "io_bazel_rules_scala",
     remote = "git://github.com/bazelbuild/rules_scala",

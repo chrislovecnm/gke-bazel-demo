@@ -43,7 +43,7 @@
           "builder": "@angular/bazel:build",
           "options": {
             "bazelCommand": "test",
-            "targetLabel": "//src/hello-world/..."
+            "targetLabel": "//js-client/src/hello-world/..."
           }
         },
         "lint": {

@@ -92,7 +92,7 @@ TEST_CMD=(bazel test
 if [[ $RBE != false ]]; then
   TEST_CMD=(bazel 
     --bazelrc bazel-0.25.0.bazelrc
-    test
+    build
     --config remote
     --define "cluster=${CONTEXT}"
     --define "repo=${REPO}"

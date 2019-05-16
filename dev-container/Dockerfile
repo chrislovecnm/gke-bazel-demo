@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/k8s-testimages/planter:0.25.2
+FROM gcr.io/k8s-testimages/planter:0.24.0
 
 ARG BUILD_DATE
 ARG VCS_REF
@@ -27,13 +27,17 @@ LABEL \
     org.label-schema.vcs-type="Git" \
     org.label-schema.vcs-url="https://github.com/GoogleCloudPlatform/gke-bazel-demo"
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN \
- set -ex \
- && apt-get update && apt-get install -y apt-transport-https gnupg2 \
+ set -ex -o pipefail \
+ && apt-get update && apt-get install -y --no-install-recommends  apt-transport-https=1.4.9 gnupg2=2.1.18-8~deb9u4 \
  && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
-&& CLOUD_SDK_REPO="cloud-sdk-stretch" \
+ && CLOUD_SDK_REPO="cloud-sdk-stretch" \
  && echo "deb http://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
  && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && apt-get update \
- && apt-get install -y kubectl google-cloud-sdk
+ && apt-get install -y --no-install-recommends kubectl=1.12.8-00 google-cloud-sdk=246.0.0-0 \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*

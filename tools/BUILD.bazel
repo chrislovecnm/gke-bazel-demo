@@ -1,4 +1,3 @@
-# The toolchain container used for execution is defined in the target indicated
 # Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# The toolchain container used for execution is defined in the target indicated
 # by "extra_execution_platforms", "host_platform" and "platforms".
 # If you are using your own toolchain container, you need to create a platform
 # target with "constraint_values" that allow for the toolchain specified with

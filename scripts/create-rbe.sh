@@ -86,7 +86,7 @@ gcloud auth configure-docker
 
 # Use Bazel to compile, build, and deploy the Java Spring Boot API
 JAVA_CMD=(bazel
-  --bazelrc=bazel-0.25.0.bazelrc
+  --bazelrc bazel-0.25.0.bazelrc
   run
   --config remote
   --define "cluster=${CONTEXT}"
@@ -130,7 +130,7 @@ echo "Updated Angular client to speak to ${API_IP}"
 
 # Use Bazel to compile, build, and deploy the Angular client
 JS_CMD=(bazel
-  --bazelrc=bazel-0.25.0.bazelrc
+  --bazelrc bazel-0.25.0.bazelrc
   run
   --config remote
   --define "cluster=${CONTEXT}"

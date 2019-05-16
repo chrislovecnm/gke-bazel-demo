@@ -262,13 +262,9 @@ history_server(
 
     templated_args = [
         "-a",
-        "src/prodapp",
+        "js-client/src/prodapp",
     ],
 )
-
-#linux_node_modules(
-#  name="fix_node_modules",
-#)
 
 # Compile the Angular sources listed in "data",
 # Expose node_modules for source dependencies

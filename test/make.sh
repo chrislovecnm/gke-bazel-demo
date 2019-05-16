@@ -103,7 +103,7 @@ function check_trailing_whitespace() {
     --exclude-dir=".terraform" --exclude-dir="dist"\
     --exclude-dir="bazel-out" --exclude-dir="planter"\
     --exclude-dir="node_modules" --exclude=".DS_Store"\
-    --exclude="*.class"\
+    --exclude="*.class" --exclude="*favicon.ico"\
     --exclude="*.png" --exclude-dir=".git" --exclude="*.pyc" .
   rc=$?
   if [ $rc = 0 ]; then

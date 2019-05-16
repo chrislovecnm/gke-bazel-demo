@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Deployment for pyrios-ui
+# Deployment for angular
 # See https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: v1
 kind: Service

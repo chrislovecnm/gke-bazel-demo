@@ -13,9 +13,12 @@
 # limitations under the License.
 
 # Instantiate the Bazel rules we use in this build file.
-load("@angular//:index.bzl", "ng_module")
+load("@npm_angular_bazel//:index.bzl", "ng_module")
 load("@build_bazel_rules_nodejs//:defs.bzl", "history_server", "rollup_bundle")
-load("@build_bazel_rules_typescript//:defs.bzl", "ts_config", "ts_devserver")
+load("@npm_bazel_typescript//:defs.bzl", "ts_config", "ts_devserver", "ts_library")
+load("@build_bazel_rules_nodejs//internal/web_package:web_package.bzl", "web_package")
+load("@io_bazel_rules_sass//:defs.bzl", "sass_binary")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image")
 load("@io_bazel_rules_docker//nodejs:image.bzl", "nodejs_image")
 
 # The package rule declares this directory as a Bazel package
@@ -35,6 +38,53 @@ ts_config(
     deps = ["//js-client/src:tsconfig.json"],
 )
 
+# We don't import from these, but the generated ngfactory code will
+NG_FACTORY_ADDED_IMPORTS = [
+    "@npm//@angular/animations",
+    "@npm//@angular/cdk",
+    "@npm//@angular/material",
+    "@npm//@angular/forms",
+]
+
+
+# We always strip these paths off the front of any assets we serve
+_ROOT_DIRS = [
+    "npm/node_modules/zone.js/dist",
+    "npm/node_modules/@angular/material/prebuilt-themes",
+    "npm/node_modules/@ngrx/store/bundles",
+]
+
+# Files that we serve in both development and production
+_ASSETS = [
+    # This label references an output of the "styles" sass_binary above.
+    "//js-client/src/styles:main",
+    "//js-client/src/images:image_assets",
+
+    # Directly reference a file that came from @angular/material npm package
+    "@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css",
+
+    # We load zone.js outside the bundle. That's because it's a "pollyfill"
+    # which speculates that such features might be available in a browser.
+    # Also it's tricky to configure dead code elimination to understand that
+    # zone.js is used, given that we don't have any import statement that
+    # imports from it.
+    "@npm//node_modules/zone.js:dist/zone.min.js",
+]
+
+# TODO what is this used for??
+ts_library(
+    name = "initialize_testbed",
+    testonly = 1,
+    srcs = [
+        "initialize_testbed.ts",
+    ],
+    deps = [
+        "@npm//@angular/core",
+        "@npm//@angular/platform-browser-dynamic",
+        "@npm//@types",
+    ],
+)
+
 # Use Angular's ng tool to compile the source code into an NgModule
 # It behaves the same as `ts_library` but with additional attributes
 # See https://github.com/alexeagle/angular-bazel-example/wiki/Angular-rules#compiling-angular-templates
@@ -42,8 +92,13 @@ ng_module(
     name = "src",
     # the sourcefiles used to compile
     srcs = glob(
-        ["*.ts"],
-        exclude = ["main.ts"],
+      include = ["*.ts", "**/*.ts"],
+      exclude = [
+          "**/*.spec.ts",
+          "main.ts",
+          "test.ts",
+          "initialize_testbed.ts",
+      ],
     ),
     # the HTML and Sass targets that output assets
     # we use in this module
@@ -54,12 +109,22 @@ ng_module(
     # the tsconfig to pass to the typescript compiler
     tsconfig = ":tsconfig.json",
     # Other dependencies we need to compile this module
-    deps = [
+    deps = NG_FACTORY_ADDED_IMPORTS + [
         "//js-client/src/hello-world",
         "//js-client/src/material",
         "//js-client/src/todos",
-        "@angular//packages/core",
-        "@angular//packages/router",
+        "@npm//@angular/core",
+        "@npm//@angular/platform-browser",
+        "@npm//@angular/router",
+        "@npm//@ngrx/store",
+    ],
+)
+
+filegroup(
+    name = "rxjs_umd_modules",
+    srcs = [
+        ":rxjs_shims.js",
+        "@npm//node_modules/rxjs:bundles/rxjs.umd.js",
     ],
 )
 
@@ -70,30 +135,37 @@ ng_module(
 ts_devserver(
     name = "devserver",
     # serve these files rooted at /
-    additional_root_paths = [
-        "npm/node_modules/zone.js/dist",
-        "npm/node_modules/tslib",
-        "npm/node_modules/@angular/material/prebuilt-themes",
+    additional_root_paths = _ROOT_DIRS,
+    # Serve these files but don't inject tags for them into the index file
+    # This might be because we only want to lazy-load these scripts on-demand,
+    # or because they aren't compatible with Require.js so we must use a runtime
+    # loader to load them.
+    data = [
+        "@npm//node_modules/@ngrx/store:bundles/store.umd.min.js",
     ],
     # Start from the development version of the main
     entry_module = "gke_bazel_example/js-client/src/main.dev",
+    # <script> and <link> tags will be automatically injected into this index file
+    index_html = "//js-client/src:assets",
+    # These scripts will be included in the JS bundle after require.js
+    # They should have only named UMD modules, or require.js will throw.
     scripts = [
-        ":module-id.js",
-    ],
-    # This is the URL we'll point our <script> tag at
-    serving_path = "/bundle.min.js",
-    # Serve these files in addition to the JavaScript bundle
-    static_files = [
-        "@npm//node_modules/zone.js:dist/zone.min.js",
         "@npm//node_modules/tslib:tslib.js",
-        "@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css",
-        "//js-client/src/styles:main.css",
-        "//js-client/src/images:image_assets",
-        "index.html",
+        ":rxjs_umd_modules",
+        ":require.config.js",
+        # We are manaully adding the bazel generated named-UMD date-fns bundle here as
+        # named-UMD bundles for non-APF npm packages are not yet automatically added.
+        # This file is generated by the npm_umd_bundle @npm//node_modules/date-fns:date-fns__umd
+        # rule that is setup by yarn_install.
+        "@npm//node_modules/date-fns:date-fns.umd.js",
     ],
+    # Serve these files in addition to the JavaScript bundle
+    # The corresponding <script> or <link> tags will be injected into the index_html
+    static_files = _ASSETS,
     # Tell Bazel to build the sources first
     deps = ["//js-client/src"],
 )
+
 
 # This is a Bazel invocation of https://rollupjs.org
 # where we can specify javascript sources to be minified and bundled into
@@ -118,42 +190,65 @@ rollup_bundle(
     # what source files this rule depends on
     deps = [
         "//js-client/src",
+        "@npm//@angular/common",
+        "@npm//@angular/core",
+        "@npm//@angular/material",
+        "@npm//@angular/platform-browser",
+        "@npm//@angular/router",
+        "@npm//@ngrx/store",
+        "@npm//rxjs",
     ],
 )
 
-#################################################################################
-# The following 3 rules do the same thing for separate files
-# index.html asks for 3 static files (zone.js, system.js, and deeppurple-amber.css)
-# and in order to have history-server serve them, we need to copy them out of
-# node_modules and into this directory (js-client/src)
-# These targets are called by either of the production servers below
-# (history_server and nodejs_image)
-# They all use Bazel's built in rule that allows you to create a rule
-# that runs a command specified.
-# See https://docs.bazel.build/versions/master/be/general.html#genrule
-
-# Copy zone.min.js to this package.
-genrule(
-    name = "copy_zonejs",
-    srcs = ["@npm//node_modules/zone.js:dist/zone.min.js"],
-    outs = ["zone.min.js"],
-    cmd = "cp $< $@",
+filegroup(
+    name = "assets",
+    srcs = [
+        "index.html",
+    ],
 )
 
-# Copy system.js to this package.
-genrule(
-    name = "copy_systemjs",
-    srcs = ["@npm//node_modules/systemjs:dist/system.js"],
-    outs = ["system.js"],
-    cmd = "cp $< $@",
-)
+web_package(
+    name = "prodapp",
+    additional_root_paths = _ROOT_DIRS + [
+        # In production mode we also serve some polyfills
+        "npm/node_modules/core-js/client",
+        "npm/node_modules/systemjs/dist"
+    ],
+    # do not sort
+    #assets = _ASSETS + [
+    assets = [
+        # This label references an output of the "styles" sass_binary above.
+        "//js-client/src/styles:main",
 
-# Copy deeppurple-amber.css to this package.
-genrule(
-    name = "copy_material_theme",
-    srcs = ["@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css"],
-    outs = ["deeppurple-amber.css"],
-    cmd = "cp $< $@",
+        # Directly reference a file that came from @angular/material npm package
+        "@npm//node_modules/@angular/material:prebuilt-themes/deeppurple-amber.css",
+
+
+        # We load zone.js outside the bundle. That's because it's a "pollyfill"
+        # which speculates that such features might be available in a browser.
+        # Also it's tricky to configure dead code elimination to understand that
+        # zone.js is used, given that we don't have any import statement that
+        # imports from it.
+        "@npm//node_modules/zone.js:dist/zone.min.js",
+
+        # For differential loading, we supply both an ESModule entry point and an es5 entry point
+        # The injector will put two complimentary script tags in the example.html
+        # do not sort
+        ":bundle.min.js",
+        ":bundle.min.es2015.js",
+    ],
+    data = [
+        ":bundle",
+        "favicon.ico",
+        "//js-client/src/images:image_assets",
+        "//js-client/src/styles:main",
+        # Include polyfills that will be requested by old browsers
+        "@npm//node_modules/systemjs:dist/system.js",
+        "@npm//node_modules/core-js:client/core.min.js",
+        "//js-client/src:assets",
+    ],
+    # <script> and <link> tags will be automatically injected into this index.
+    index_html = "//js-client/src:assets",
 )
 
 # Run a production server with history-server
@@ -163,14 +258,11 @@ genrule(
 # See this Bazel target exposed as a yarn script in `js-client/package.json`
 history_server(
     name = "prodserver",
-    data = [
-        "index.html",
-        ":bundle",
-        ":copy_material_theme",
-        ":copy_systemjs",
-        ":copy_zonejs",
-        "//js-client/src/images:image_assets",
-        "//js-client/src/styles:main",
+    data = [":prodapp"],
+
+    templated_args = [
+        "-a",
+        "js-client/src/prodapp",
     ],
 )
 
@@ -182,30 +274,28 @@ history_server(
 nodejs_image(
     # name of the target we call in `js-client/BUILD.bazel`
     # when we deploy to k8s
-    name = "angular_image",
-    # This is a workaround for a regression bug
-    # See https://github.com/bazelbuild/rules_docker/issues/618
-    args = [""],
+    name = "nodejs_image",
     # files, or Bazel targets that produce/move files, to build
     # or move into this image, to be made available when running
     # the application
-    data = [
-        "index.html",
-        ":bundle",
-        ":copy_material_theme",
-        ":copy_systemjs",
-        ":copy_zonejs",
-        "//js-client/src/images:image_assets",
-        "//js-client/src/styles:main",
-    ],
+    data = [":prodapp"],
     # what script nodejs should run when this image is run
     entry_point = "history-server/modules/cli.js",
     # which Bazel target should be called to generate our node_modules
-    node_modules = "@npm//:node_modules",
+    node_modules = "@history-server_runtime_deps//:node_modules",
     # these are the arguments passed to the entry_point when the
     # image is run. ex: `nodejs {entry_point} {templated_args}`
-    # we set ours to "js-client/src" because we want history-server
-    # to serve the index.html in the js-client/src directory.
+    # we set ours to "js-client/src/prodapp" because we want history-server
+    # to serve from the js-client/src/prodapp directory.
     # See https://github.com/mjackson/history-server
-    templated_args = ["js-client/src"],
+    templated_args = ["js-client/src/prodapp"],
+)
+
+container_image(
+    name = "angular_image",
+    base = ":nodejs_image",
+    # Actions created by this rule are I/O-bound,
+    # so there is no benefit to running them remotely
+    # tags = ["local"],
+    workdir = "/app/js-client/src/nodejs_image.binary.runfiles/gke_bazel_example",
 )

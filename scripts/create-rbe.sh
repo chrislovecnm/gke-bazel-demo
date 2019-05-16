@@ -35,59 +35,49 @@ REPO=gcr.io/$PROJECT
 ## Enabling docker gcp helper
 gcloud auth configure-docker
 
-
 #########################
 # RBE setup (if enabled)
 # (See DEVELOPER.md)
 #########################
 
-# If you want to enable RBE, set it when calling `make create`
-# Any non-false value will enable RBE options (ex: RBE=true make create)
-RBE="${RBE:-false}"
 
-RBE_FLAGS=(
-  "--config=remote"
-	"--remote_instance_name=projects/$PROJECT/instances/default_instance"
-	"--project_id=$PROJECT"
-)
+#if  [[ $RBE != false ]]; then
+#	# Issue some warnings about RBE on GCP
+#	echo -e "\\n*************************************************************\\n\
+#WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\\n\
+#See README for instructions on setting up RBE support in this demo.\\n\
+#*************************************************************\\n"
 
-if  [[ $RBE != false ]]; then
-	# Issue some warnings about RBE on GCP
-	echo -e "\\n*************************************************************\\n\
-WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\\n\
-See README for instructions on setting up RBE support in this demo.\\n\
-*************************************************************\\n"
-
-	# if RBE, add remote config to .bazelrc
-	cp ".bazelrc.remote" ".bazelrc"
+#	# if RBE, add remote config to .bazelrc
+#	cp ".bazelrc.remote" ".bazelrc"
 
 	# if RBE, gcloud needs alpha component
-	gcloud components install alpha
+#	gcloud components install alpha
 
   # if RBE, enable API (this also creates default_instance)
-  gcloud services enable remotebuildexecution.googleapis.com \
-    "--project=$PROJECT"
+#  gcloud services enable remotebuildexecution.googleapis.com \
+#    "--project=$PROJECT"
 
   # if RBE, create a worker pool, if one doesn't exist
-	POOL_LIST=$(gcloud alpha remote-build-execution worker-pools list \
-		 --instance=default_instance)
+#	POOL_LIST=$(gcloud alpha remote-build-execution worker-pools list \
+#		 --instance=default_instance)
 
-	if [[ ! "$POOL_LIST" =~ "state: RUNNING" ]]; then
-		echo -n "Creating an RBE worker pool..."
+#	if [[ ! "$POOL_LIST" =~ "state: RUNNING" ]]; then
+#		echo -n "Creating an RBE worker pool..."
 
-		POOL_NAME="$PROJECT-rbe-pool"
-		gcloud alpha remote-build-execution worker-pools create \
-			"${POOL_NAME:0:50}" \
-			--instance=default_instance \
-			--worker-count=3 \
-			--machine-type=n1-standard-2 \
-			--disk-size=50
-
-		echo "done."
-	else
-		echo "Using the existing RBE worker pool."
-	fi
-fi
+#		POOL_NAME="$PROJECT-rbe-pool"
+#		gcloud alpha remote-build-execution worker-pools create \
+#			"${POOL_NAME:0:50}" \
+#			--instance=default_instance \
+#			--worker-count=3 \
+#			--machine-type=n1-standard-2 \
+#			--disk-size=50
+#
+#		echo "done."
+#	else
+#		echo "Using the existing RBE worker pool."
+#	fi
+#fi
 
 
 ##################
@@ -95,24 +85,15 @@ fi
 ##################
 
 # Use Bazel to compile, build, and deploy the Java Spring Boot API
-JAVA_CMD=(bazel run
+JAVA_CMD=(bazel
+  --bazelrc bazel-0.25.0.bazelrc
+  run
+  --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //java-spring-boot:k8s.apply)
 
-if [[ $RBE != false ]]; then
-	JAVA_CMD+=("${RBE_FLAGS[@]}")
-	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
-fi
-
-# RBE can't run on mac yet
-if [[ $RBE != false && "$OSTYPE" == "darwin"* ]]; then
-	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${JAVA_CMD[*]}"
-else
-	"${JAVA_CMD[@]}"
-fi
-
+echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
 
 ##############################
 # Update Angular API endpoint
@@ -148,24 +129,19 @@ echo "Updated Angular client to speak to ${API_IP}"
 ########################
 
 # Use Bazel to compile, build, and deploy the Angular client
-JS_CMD=(bazel run
+JS_CMD=(bazel
+  --bazelrc bazel-0.25.0.bazelrc
+  run
+  --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //js-client:k8s.apply)
 
-if [[ $RBE != false ]]; then
-	JS_CMD+=("${RBE_FLAGS[@]}")
-	echo "Running remote JS_CMD = ${JS_CMD[*]}"
-fi
+#JS_CMD+=("${RBE_FLAGS[@]}")
+echo "Running remote JS_CMD = ${JS_CMD[*]}"
 
-# See https://github.com/bazelbuild/rules_nodejs/issues/396
-if [[ "$OSTYPE" == "darwin"* ]]; then
-	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${JS_CMD[@]}"
-else
-	"${JS_CMD[@]}"
-fi
-
+# shellcheck source=/dev/null
+source "$ROOT/scripts/planter.sh" "${JS_CMD[@]}"
 
 #########
 # Output
@@ -200,8 +176,3 @@ echo "View your angular client at http://${ANGULAR_IP}"
 # put js-client/src/todos/todos.service.ts back to original API (localhost)
 mv "js-client/src/todos/todos.service.ts.bak" \
 	 "js-client/src/todos/todos.service.ts"
-
-# if RBE, revert .bazelrc to local
-if  [[ $RBE != false ]]; then
-	cp ".bazelrc.local" ".bazelrc"
-fi

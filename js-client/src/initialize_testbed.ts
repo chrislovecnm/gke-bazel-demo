@@ -13,9 +13,11 @@
 // limitations under the License.
 
 /**
- * Used to launch the application under Bazel development mode.
+ * @fileoverview Provides a script to initialize TestBed before tests are run.
+ * This file should be included in the "runtime_deps" of a "ts_web_test_suite"
+ * rule.
  */
-import {platformBrowser} from '@angular/platform-browser';
-import {AppModuleNgFactory} from './app.module.ngfactory';
+import {TestBed} from '@angular/core/testing';
+import {BrowserDynamicTestingModule, platformBrowserDynamicTesting} from '@angular/platform-browser-dynamic/testing';
 
-platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
+TestBed.initTestEnvironment(BrowserDynamicTestingModule, platformBrowserDynamicTesting());

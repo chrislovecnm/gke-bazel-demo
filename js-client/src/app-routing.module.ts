@@ -18,13 +18,13 @@ import {PreloadAllModules, RouterModule, Routes} from '@angular/router';
 // These are lazy-loaded routes - note that we don't import the modules here
 // to avoid having an eager dependency on them.
 const routes: Routes = [
+//  {
+//    path: '',
+//    pathMatch: 'full',
+//   loadChildren:  import('./hello-world/hello-world.module.ngfactory').then(m => m.HelloWorldModuleNgFactory)
+//  },
   {
-    path: 'hello',
-    pathMatch: 'full',
-    loadChildren:  import('./hello-world/hello-world.module.ngfactory').then(m => m.HelloWorldModuleNgFactory)
-  },
-  {
-    path: 'todos',
+    path: '',
     pathMatch: 'full',
     loadChildren: () => import('./todos/todos.module.ngfactory').then(m => m.TodosModuleNgFactory)
   },

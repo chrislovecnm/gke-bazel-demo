@@ -43,6 +43,10 @@ create:
 rbe-create:
 	@source scripts/create-rbe.sh
 
+.PHONY: bazel-test
+bazel-test:
+	@source scripts/test.sh
+
 .PHONY: validate
 validate:
 	@source scripts/validate.sh

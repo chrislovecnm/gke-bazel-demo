@@ -90,7 +90,7 @@ TEST_CMD=(bazel test
   //js-client/...)
 
 if [[ $RBE != false ]]; then
-  TEST_CMD=(bazel 
+  TEST_CMD=(bazel
     --bazelrc bazel-0.25.0.bazelrc
     build
     --config remote

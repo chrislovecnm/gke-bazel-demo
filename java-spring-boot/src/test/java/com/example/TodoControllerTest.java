@@ -30,12 +30,12 @@ import org.springframework.test.web.servlet.MockMvc;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class TodoControllerTests {
+public class TodoControllerTest {
 
   @Autowired private MockMvc mockMvc;
 
   @Test
-  public void testNoParamTodoShouldReturnDefaultTask() throws Exception {
+  public void noParamTodoShouldReturnDefaultTaskTest() throws Exception {
 
     this.mockMvc
         .perform(get("/todos"))
@@ -46,7 +46,7 @@ public class TodoControllerTests {
   }
 
   @Test
-  public void testParamTodoShouldReturnTailoredTask() throws Exception {
+  public void paramTodoShouldReturnTailoredTaskTest() throws Exception {
 
     this.mockMvc
         .perform(

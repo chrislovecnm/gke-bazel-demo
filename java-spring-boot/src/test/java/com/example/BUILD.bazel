@@ -14,7 +14,7 @@
 
 java_test(
     name = "TodoController",
-    srcs = ["TodoControllerTests.java"],
+    srcs = ["TodoControllerTest.java"],
     deps = [
         "//java-spring-boot:todo",
         "//java-spring-boot:todo_controller",

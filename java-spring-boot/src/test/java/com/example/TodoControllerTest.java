@@ -35,7 +35,7 @@ public class TodoControllerTest {
   @Autowired private MockMvc mockMvc;
 
   @Test
-  public void noParamTodoShouldReturnDefaultTaskTest() throws Exception {
+  public void noParamTodoShouldReturnDefaultTask() throws Exception {
 
     this.mockMvc
         .perform(get("/todos"))
@@ -46,7 +46,7 @@ public class TodoControllerTest {
   }
 
   @Test
-  public void paramTodoShouldReturnTailoredTaskTest() throws Exception {
+  public void paramTodoShouldReturnTailoredTask() throws Exception {
 
     this.mockMvc
         .perform(

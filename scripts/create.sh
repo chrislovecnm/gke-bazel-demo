@@ -96,6 +96,7 @@ fi
 
 # Use Bazel to compile, build, and deploy the Java Spring Boot API
 JAVA_CMD=(bazel run
+  "--incompatible_disallow_dict_plus=false"
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //java-spring-boot:k8s.apply)
@@ -149,6 +150,7 @@ echo "Updated Angular client to speak to ${API_IP}"
 
 # Use Bazel to compile, build, and deploy the Angular client
 JS_CMD=(bazel run
+  "--incompatible_disallow_dict_plus=false"
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
   //js-client:k8s.apply)

@@ -32,7 +32,7 @@ public class TodoController {
 
   // Get all todos
   @GetMapping("/api/todos")
-  public ArrayList list_todos() {
+  public ArrayList<Todo> list_todos() {
     return todos;
   }
 

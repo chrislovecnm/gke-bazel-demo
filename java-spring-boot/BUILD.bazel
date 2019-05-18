@@ -35,6 +35,13 @@ java_library(
     srcs = ["src/main/java/com/example/Todo.java"],
 )
 
+java_library(
+    name = "demo",
+    # the source file we need to compile
+    # (You can have more than one in this array, but we just need one.)
+    srcs = ["src/main/java/com/example/Demo.java"],
+)
+
 # Compile these Java sources and create a Java library
 # we can use as a dependency later
 # See https://docs.bazel.build/versions/master/be/java.html#java_library

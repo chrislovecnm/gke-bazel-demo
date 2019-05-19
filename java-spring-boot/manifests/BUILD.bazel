@@ -22,4 +22,4 @@ package(default_visibility = ["//visibility:public"])
 # We want to export the 'deployment.yaml' file as a Bazel target
 # so we can call it as the K8s deployment file
 # in the 'template' argument in java-spring-boot/BUILD.bazel
-exports_files(["deployment.yaml"])
+exports_files(["deployment.yaml", "ingress.yaml"])

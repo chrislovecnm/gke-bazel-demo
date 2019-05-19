@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Deployment for angular
-# See https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: v1
 kind: Service
 metadata:
@@ -21,15 +19,17 @@ metadata:
   labels:
     app: angular-client
 spec:
-  type: LoadBalancer
+  type: Nodeport
   ports:
   - port: 80
-    targetPort: 8080
+    nodePort: 80
     protocol: TCP
     name: http
   selector:
     app: angular-client
 ---
+# Deployment for angular
+# See https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: apps/v1
 kind: Deployment
 metadata:

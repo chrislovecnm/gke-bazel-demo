@@ -25,7 +25,7 @@ const httpOptions = {
 
 @Injectable()
 export class TodosService {
-  todosUrl = 'http://35.247.0.138/api/todos';
+  todosUrl = '/api/todos';
 
   constructor(private http: HttpClient) {}
 

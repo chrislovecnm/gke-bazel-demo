@@ -88,6 +88,7 @@ gcloud auth configure-docker
 JAVA_CMD=(bazel
   --bazelrc bazel-0.25.0.bazelrc
   run
+  "--incompatible_disallow_dict_plus=false"
   --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
@@ -132,6 +133,7 @@ echo "Updated Angular client to speak to ${API_IP}"
 JS_CMD=(bazel
   --bazelrc bazel-0.25.0.bazelrc
   run
+  "--incompatible_disallow_dict_plus=false"
   --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"

@@ -37,6 +37,17 @@ workspace(name = "gke_bazel_example")
 # See https://docs.bazel.build/versions/master/be/workspace.html#http_archive
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# Load go rules to build kubectl
+http_archive(
+  name = "io_bazel_rules_go",
+  urls = ["https://github.com/bazelbuild/rules_go/releases/download/0.18.5/rules_go-0.18.5.tar.gz"],
+  sha256 = "a82a352bffae6bee4e95f68a8d80a70e87f42c4741e6a448bec11998fcc82329",
+)
+load("@io_bazel_rules_go//go:deps.bzl", "go_rules_dependencies", "go_register_toolchains")
+
+go_rules_dependencies()
+go_register_toolchains()
+
 # This is a specific Bazel toolchain needed for RBE Alpha support.
 # See DEVELOPER.md for information on RBE.
 
@@ -51,6 +62,7 @@ http_archive(
 
 load("@bazel_toolchains//rules:rbe_repo.bzl", "rbe_autoconfig")
 rbe_autoconfig(name = "rbe_default")
+
 
 # Skylib provides functions for writing custom Bazel rules.
 # We use custom bazel rules in this demo, so we need skylib.
@@ -90,6 +102,7 @@ http_archive(
     url = "https://github.com/bazelbuild/rules_sass/archive/1.17.2.zip",
 )
 
+
 ################################################################################
 # Load Bazel rules from our dependencies  and run some of their rules to fetch
 # further dependencies
@@ -100,6 +113,8 @@ load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "yarn_instal
 
 # The minimum bazel version to use with this example repo is 0.21.0
 check_bazel_version("0.24.0")
+
+
 
 # With the yarn_install or npm_install repository rules, Bazel will setup your
 # node_modules for you in an external workspace named after the repository rule.
@@ -201,10 +216,26 @@ git_repository(
 
 # Load a couple rules we need from the K8s Bazel repo
 load("@io_bazel_rules_k8s//k8s:k8s.bzl", "k8s_repositories", "k8s_defaults")
+load("@io_bazel_rules_k8s//toolchains/kubectl:kubectl_configure.bzl", "kubectl_configure")
+
+# Build kubectl from source
+kubectl_configure(name="k8s_config", build_srcs=True, k8s_commit = "v1.13.5",
+  # Run wget https://github.com/kubernetes/kubernetes/archive/v1.13.1.tar.gz
+  # to download kubernetes source and run sha256sum on the downloaded archive
+  # to get the value of this attribute.
+  k8s_sha256 = "6caad3336e6676f26106975ab327548f8ea1d0717a6698f7a407ac811f740250",
+  # Open the archive downloaded from https://github.com/kubernetes/kubernetes/archive/
+  # This attribute is the name of the top level directory in that archive.
+  k8s_prefix = "kubernetes-1.13.5"
+)
+
+k8s_repositories()
+
 
 # Download the dependencies the K8s Bazel rules need
 # See https://github.com/bazelbuild/rules_k8s/blob/master/k8s/k8s.bzl#L22
 k8s_repositories()
+
 
 # Set up some default attributes when the K8s rule "k8s_object" is called later
 # This only applies to "k8s_object" called with kind = "deployment"

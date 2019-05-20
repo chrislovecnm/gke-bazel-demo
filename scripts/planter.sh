@@ -53,6 +53,6 @@ docker_extra+=" -v ${HOME}/.kube:${HOME}/.kube:delegated"
 docker_extra+=" -v ${HOME}/.config:${HOME}/.config:delegated"
 docker_extra+=" -v ${HOME}/.docker:${HOME}/.docker:delegated"
 
-IMAGE=gcr.io/pso-examples/planter-kubectl:0.24.0 \
+IMAGE=gcr.io/pso-examples/planter-kubectl:0.25.2 \
 DOCKER_EXTRA="${docker_extra}" \
 "$PLANTER_PATH/planter.sh" "$@"

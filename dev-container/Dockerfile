@@ -31,7 +31,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN \
  set -ex -o pipefail \
- && apt-get update && apt-get install -y --no-install-recommends  apt-transport-https=1.4.9 gnupg2=2.1.18-8~deb9u4 \
+ && apt-get update && apt-get install -y --no-install-recommends  apt-transport-https=1.4.9 gnupg2=2.1.18-8~deb9u4 libxss1=1:1.2.2-1 default-jdk=2:1.8-58+deb9u1 \
  && wget -q -O - https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
  && echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list \
  && CLOUD_SDK_REPO="cloud-sdk-stretch" \

@@ -146,7 +146,7 @@ ts_devserver(
     # Start from the development version of the main
     entry_module = "gke_bazel_example/js-client/src/main.dev",
     # <script> and <link> tags will be automatically injected into this index file
-    index_html = "//js-client/src/bazel-demo:assets",
+    index_html = "//js-client/src:assets",
     # These scripts will be included in the JS bundle after require.js
     # They should have only named UMD modules, or require.js will throw.
     scripts = [
@@ -200,6 +200,13 @@ rollup_bundle(
     ],
 )
 
+filegroup(
+    name = "assets",
+    srcs = [
+        "index.html",
+    ],
+)
+
 web_package(
     name = "prodapp",
     additional_root_paths = _ROOT_DIRS + [
@@ -238,10 +245,10 @@ web_package(
         # Include polyfills that will be requested by old browsers
         "@npm//node_modules/systemjs:dist/system.js",
         "@npm//node_modules/core-js:client/core.min.js",
-        "//js-client/src/bazel-demo:assets",
+        "//js-client/src:assets",
     ],
     # <script> and <link> tags will be automatically injected into this index.
-    index_html = "//js-client/src/bazel-demo:assets",
+    index_html = "//js-client/src:assets",
 )
 
 # Run a production server with history-server

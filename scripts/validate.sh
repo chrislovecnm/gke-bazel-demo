@@ -86,18 +86,28 @@ else
   echo "$JAVA_APP_NAME successfully deployed"
 fi
 
-
-# run Java API tests
-API_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=java-spring-boot -o jsonpath='{..ip}')
-# shellcheck source=/dev/null
-source "$ROOT/scripts/java-spring-boot-tests.sh" "$API_IP"
+# get the ip address
+IP=$(kubectl --namespace default --context="${CONTEXT}" get ing lapp=bazel-demo -o jsonpath='{..    ip}')
 
 # curl angular endpoint
-ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=angular-client -o jsonpath='{..ip}')
-ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$ANGULAR_IP")
+ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$IP")
+
+for _ in {1..120}; do
+  ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$IP")
+  if [ "$ANGULAR_STATUS" == 200 ]; then
+    echo "The Angular client is gettable."
+    break
+  fi
+  sleep 30
+  echo "Waiting for ingress to become ready"
+done
 
 if [ "$ANGULAR_STATUS" == 200 ]; then
-	echo "The Angular client is gettable."
+    echo "The Angular client is gettable."
 else
-	echo "The Angular client has a problem, returned status $ANGULAR_STATUS"
+    echo "The Angular client has a problem, returned status $ANGULAR_STATUS"
 fi
+
+# run Java API tests
+# shellcheck source=/dev/null
+source "$ROOT/scripts/java-spring-boot-tests.sh" "$IP"

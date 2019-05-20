@@ -38,4 +38,4 @@ k8s_objects(
       "//java-spring-boot:k8s",
       "//js-client:k8s",
    ]
-) 
+)

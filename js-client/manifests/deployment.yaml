@@ -19,12 +19,10 @@ metadata:
   labels:
     app: angular-client
 spec:
-  type: Nodeport
+  type: NodePort
   ports:
-  - port: 80
-    nodePort: 80
+  - port: 8080
     protocol: TCP
-    name: http
   selector:
     app: angular-client
 ---
@@ -52,3 +50,25 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+---
+# Ingress for the demo
+# See https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bazel-demo
+  labels:
+    app: bazel-demo
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/*
+        backend:
+          serviceName: java-spring-boot
+          servicePort: 8080
+      - path: /*
+        backend:
+          serviceName: angular-client
+          servicePort: 8080
+

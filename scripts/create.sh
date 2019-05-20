@@ -88,54 +88,6 @@ See README for instructions on setting up RBE support in this demo.\\n\
 		echo "Using the existing RBE worker pool."
 	fi
 fi
-##################
-# Create Ingress
-##################
-
-# Use Bazel to compile, build, and deploy the Java Spring Boot API
-CMD=(bazel run
-  "--incompatible_disallow_dict_plus=false"
-  --define "cluster=${CONTEXT}"
-  --define "repo=${REPO}"
-  //ingress:k8s.apply)
-
-if [[ $RBE != false ]]; then
-	CMD+=("${RBE_FLAGS[@]}")
-	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
-fi
-
-# RBE can't run on mac yet
-if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
-	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
-else
-	"${CMD[@]}"
-fi
-
-##################
-# Deploy Ingress
-##################
-
-# Use Bazel to compile, build, and deploy the Java Spring Boot API
-CMD=(bazel run
-     "--incompatible_disallow_dict_plus=false"
-     --define "cluster=${CONTEXT}"
-     --define "repo=${REPO}"
-     //ingress:k8s.apply)
-
-if [[ $RBE != false ]]; then
-	CMD+=("${RBE_FLAGS[@]}")
-	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
-fi
-
-# RBE can't run on mac yet
-if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
-	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
-else
-	"${CMD[@]}"
-fi
-
 
 ##################
 # Create Demo
@@ -167,7 +119,7 @@ fi
 
 # output the IP address of the angular app service to view in browser
 echo -n "Waiting for Angular service to setup endpoints..."
-for _ in {1..60}; do
+for _ in {1..360}; do
   ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" \
     get ingress -lapp=bazel-demo -o jsonpath='{..ip}')
   if [[ $ANGULAR_IP =~ [(0-9)+\.]{4} ]]; then

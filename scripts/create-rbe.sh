@@ -36,33 +36,6 @@ REPO=gcr.io/$PROJECT
 gcloud auth configure-docker
 
 ##################
-# Deploy Ingress
-##################
-
-# Use Bazel to compile, build, and deploy the Java Spring Boot API
-CMD=(bazel 
-     --bazelrc bazel-0.25.0.bazelrc
-     run
-     "--incompatible_disallow_dict_plus=false"
-     --config remote
-     --define "cluster=${CONTEXT}"
-     --define "repo=${REPO}"
-     //ingress:k8s.apply)
-
-if [[ $RBE != false ]]; then
-	CMD+=("${RBE_FLAGS[@]}")
-	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
-fi
-
-# RBE can't run on mac yet
-if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
-	# shellcheck source=/dev/null
-	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
-else
-	"${CMD[@]}"
-fi
-
-##################
 # Deploy Demo
 ##################
 
@@ -77,7 +50,7 @@ CMD=(bazel
   //:bazel_demo_k8s.apply)
 
 # RBE can't run on mac yet
-if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
+if [[ "$OSTYPE" == "darwin"* ]]; then
 	# shellcheck source=/dev/null
 	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
 else

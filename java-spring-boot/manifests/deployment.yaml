@@ -23,7 +23,6 @@ spec:
   type: NodePort
   ports:
   - port: 8080
-    nodePort: 8080
     protocol: TCP
   selector:
     app: java-spring-boot

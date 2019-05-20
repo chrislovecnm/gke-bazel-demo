@@ -33,11 +33,9 @@ alias(
 )
 
 k8s_objects(
-   name = "bazel-demo",
+   name = "bazel_demo_k8s",
    objects = [
       "//java-spring-boot:k8s",
       "//js-client:k8s",
-# TODO this is not working, investigating
-#   "//ingress:k8s",
    ]
 ) 

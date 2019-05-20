@@ -35,115 +35,54 @@ REPO=gcr.io/$PROJECT
 ## Enabling docker gcp helper
 gcloud auth configure-docker
 
-#########################
-# RBE setup (if enabled)
-# (See DEVELOPER.md)
-#########################
-
-
-#if  [[ $RBE != false ]]; then
-#	# Issue some warnings about RBE on GCP
-#	echo -e "\\n*************************************************************\\n\
-#WARNING: GCP RBE support is in Alpha. DO NOT USE IN PRODUCTION.\\n\
-#See README for instructions on setting up RBE support in this demo.\\n\
-#*************************************************************\\n"
-
-#	# if RBE, add remote config to .bazelrc
-#	cp ".bazelrc.remote" ".bazelrc"
-
-	# if RBE, gcloud needs alpha component
-#	gcloud components install alpha
-
-  # if RBE, enable API (this also creates default_instance)
-#  gcloud services enable remotebuildexecution.googleapis.com \
-#    "--project=$PROJECT"
-
-  # if RBE, create a worker pool, if one doesn't exist
-#	POOL_LIST=$(gcloud alpha remote-build-execution worker-pools list \
-#		 --instance=default_instance)
-
-#	if [[ ! "$POOL_LIST" =~ "state: RUNNING" ]]; then
-#		echo -n "Creating an RBE worker pool..."
-
-#		POOL_NAME="$PROJECT-rbe-pool"
-#		gcloud alpha remote-build-execution worker-pools create \
-#			"${POOL_NAME:0:50}" \
-#			--instance=default_instance \
-#			--worker-count=3 \
-#			--machine-type=n1-standard-2 \
-#			--disk-size=50
-#
-#		echo "done."
-#	else
-#		echo "Using the existing RBE worker pool."
-#	fi
-#fi
-
-
 ##################
-# Deploy Java API
+# Deploy Ingress
 ##################
 
 # Use Bazel to compile, build, and deploy the Java Spring Boot API
-JAVA_CMD=(bazel
-  --bazelrc bazel-0.25.0.bazelrc
-  run
-  "--incompatible_disallow_dict_plus=false"
-  --config remote
-  --define "cluster=${CONTEXT}"
-  --define "repo=${REPO}"
-  //java-spring-boot:k8s.apply)
+CMD=(bazel 
+     --bazelrc bazel-0.25.0.bazelrc
+     run
+     "--incompatible_disallow_dict_plus=false"
+     --config remote
+     --define "cluster=${CONTEXT}"
+     --define "repo=${REPO}"
+     //ingress:k8s.apply)
 
-echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
-
-##############################
-# Update Angular API endpoint
-##############################
-
-# make sure Angular is talking to the deployed Java API, not local
-echo -n "Waiting for Java service to setup endpoints..."
-for _ in {1..60}; do
-  API_IP=$(kubectl --namespace default --context="${CONTEXT}" \
-    get svc -lapp=java-spring-boot -o jsonpath='{..ip}')
-  if [[ $API_IP =~ [(0-9)+\.]{4} ]]; then
-		echo "done."
-    break
-  fi
-  sleep 2
-done
-
-# handle timeout
-if [ -z "$API_IP" ]; then
-	echo -e "Getting the Java API IP address timed out.\\n\
-Check on the service and re-run 'make create'."
-	exit 1
+if [[ $RBE != false ]]; then
+	CMD+=("${RBE_FLAGS[@]}")
+	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
 fi
 
-sed -i.bak -e "s/localhost:8080/${API_IP}/g" \
-	"js-client/src/todos/todos.service.ts"
+# RBE can't run on mac yet
+if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
+	# shellcheck source=/dev/null
+	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
+else
+	"${CMD[@]}"
+fi
 
-echo "Updated Angular client to speak to ${API_IP}"
+##################
+# Deploy Demo
+##################
 
-
-########################
-# Deploy Angular Client
-########################
-
-# Use Bazel to compile, build, and deploy the Angular client
-JS_CMD=(bazel
+# Use Bazel to compile, build, and deploy the Java Spring Boot API
+CMD=(bazel
   --bazelrc bazel-0.25.0.bazelrc
   run
   "--incompatible_disallow_dict_plus=false"
   --config remote
   --define "cluster=${CONTEXT}"
   --define "repo=${REPO}"
-  //js-client:k8s.apply)
+  //:bazel_demo_k8s.apply)
 
-#JS_CMD+=("${RBE_FLAGS[@]}")
-echo "Running remote JS_CMD = ${JS_CMD[*]}"
-
-# shellcheck source=/dev/null
-source "$ROOT/scripts/planter.sh" "${JS_CMD[@]}"
+# RBE can't run on mac yet
+if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
+	# shellcheck source=/dev/null
+	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
+else
+	"${CMD[@]}"
+fi
 
 #########
 # Output
@@ -169,12 +108,3 @@ Check on the service and re-run 'make create'."
 fi
 
 echo "View your angular client at http://${ANGULAR_IP}"
-
-
-##########
-# Cleanup
-##########
-
-# put js-client/src/todos/todos.service.ts back to original API (localhost)
-mv "js-client/src/todos/todos.service.ts.bak" \
-	 "js-client/src/todos/todos.service.ts"

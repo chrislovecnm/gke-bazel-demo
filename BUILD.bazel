@@ -37,6 +37,6 @@ k8s_objects(
    objects = [
       "//java-spring-boot:k8s",
       "//js-client:k8s",
-#      "//ingress:k8s",
+#   "//ingress:k8s",
    ]
 ) 

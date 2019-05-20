@@ -112,6 +112,30 @@ else
 	"${CMD[@]}"
 fi
 
+##################
+# Deploy Ingress
+##################
+
+# Use Bazel to compile, build, and deploy the Java Spring Boot API
+CMD=(bazel run
+     "--incompatible_disallow_dict_plus=false"
+     --define "cluster=${CONTEXT}"
+     --define "repo=${REPO}"
+     //ingress:k8s.apply)
+
+if [[ $RBE != false ]]; then
+	CMD+=("${RBE_FLAGS[@]}")
+	echo "Running remote JAVA_CMD = ${JAVA_CMD[*]}"
+fi
+
+# RBE can't run on mac yet
+if [[ $RBE != false || "$OSTYPE" == "darwin"* ]]; then
+	# shellcheck source=/dev/null
+	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
+else
+	"${CMD[@]}"
+fi
+
 
 ##################
 # Create Demo
@@ -160,7 +184,7 @@ Check on the service and re-run 'make create'."
 	exit 1
 fi
 
-echo "View your angular client at http://${ANGULAR_IP}/bazel-example/"
+echo "View your angular client at http://${ANGULAR_IP}"
 
 # if RBE, revert .bazelrc to local
 if  [[ $RBE != false ]]; then

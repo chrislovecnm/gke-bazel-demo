@@ -238,7 +238,7 @@ web_package(
         # Include polyfills that will be requested by old browsers
         "@npm//node_modules/systemjs:dist/system.js",
         "@npm//node_modules/core-js:client/core.min.js",
-        "//js-client/src:assets",
+        "//js-client/src/bazel-demo:assets",
     ],
     # <script> and <link> tags will be automatically injected into this index.
     index_html = "//js-client/src/bazel-demo:assets",

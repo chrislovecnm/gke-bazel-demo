@@ -101,4 +101,10 @@ public class TodoController {
 
     throw new TodoNotFoundException();
   }
+  
+  // Get '/'
+  @GetMapping("/")
+  public String here() {
+    return "here";
+  }
 }

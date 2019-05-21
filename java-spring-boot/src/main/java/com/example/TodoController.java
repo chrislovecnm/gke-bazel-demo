@@ -106,7 +106,16 @@ public class TodoController {
   * Default url '/'
   */
   @GetMapping("/")
-  public String here() {
+  public String healthCheck() {
     return "here";
   }
+
+  /**
+  * Default url '/api'
+  */
+  @GetMapping("/api")
+  public String baseURL() {
+    return "base url";
+  }
+
 }

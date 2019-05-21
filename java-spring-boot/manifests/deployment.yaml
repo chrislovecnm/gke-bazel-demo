@@ -36,7 +36,7 @@ metadata:
   labels:
     app: java-spring-boot
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: java-spring-boot

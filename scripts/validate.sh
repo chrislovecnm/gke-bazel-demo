@@ -38,7 +38,6 @@ cd "$ROOT/terraform" || exit; CLUSTER_NAME=$(terraform output cluster_name) \
 # Get credentials for the k8s cluster
 gcloud container clusters get-credentials "$CLUSTER_NAME" --zone="$ZONE"
 
-
 # Check rollout status of the JS client
 JS_APP_NAME=$(kubectl get deployments -n default \
   -ojsonpath='{.items[0].metadata.labels.app}')
@@ -86,18 +85,36 @@ else
   echo "$JAVA_APP_NAME successfully deployed"
 fi
 
+ING_IP=$(kubectl --namespace default --context="${CONTEXT}" \
+    get ingress -lapp=bazel-demo -o jsonpath='{..ip}')
 
-# run Java API tests
-API_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=java-spring-boot -o jsonpath='{..ip}')
-# shellcheck source=/dev/null
-source "$ROOT/scripts/java-spring-boot-tests.sh" "$API_IP"
+if [[ $ING_IP =~ [(0-9)+\.]{4} ]]; then
+    echo "found ingress ip: ${ING_IP}"
+else
+  echo "error finding ingress ip address"
+  exit 1
+fi
 
-# curl angular endpoint
-ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" get svc -lapp=angular-client -o jsonpath='{..ip}')
-ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$ANGULAR_IP")
+# it can take awhile for an ingress to start, so we need to wait awhile
+# and test multiple times
+for _ in {1..40}; do
+  # curl angular endpoint
+  ANGULAR_STATUS=$(curl -o /dev/null -s -w "%{http_code}\\n" "$ING_IP")
+  if [ "$ANGULAR_STATUS" == 200 ]; then
+    echo "The Angular app is reachable."
+    break
+  fi
+  sleep 30
+  echo "Waiting for ingress to become ready."
+done
 
 if [ "$ANGULAR_STATUS" == 200 ]; then
-	echo "The Angular client is gettable."
+    echo "The Angular app is reachable."
 else
-	echo "The Angular client has a problem, returned status $ANGULAR_STATUS"
+    echo "The Angular app has a problem, returned status $ANGULAR_STATUS"
+    exit 1
 fi
+
+# run Java API tests
+# shellcheck source=/dev/null
+source "$ROOT/scripts/java-spring-boot-tests.sh" "$ING_IP"

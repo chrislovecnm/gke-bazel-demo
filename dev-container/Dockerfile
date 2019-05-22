@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/k8s-testimages/planter:0.24.0
+FROM gcr.io/k8s-testimages/planter:0.25.2
 
 ARG BUILD_DATE
 ARG VCS_REF

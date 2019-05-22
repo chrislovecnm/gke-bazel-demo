@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Deployment for angular
-# See https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: v1
 kind: Service
 metadata:
@@ -21,15 +19,15 @@ metadata:
   labels:
     app: angular-client
 spec:
-  type: LoadBalancer
+  type: NodePort
   ports:
-  - port: 80
-    targetPort: 8080
+  - port: 8080
     protocol: TCP
-    name: http
   selector:
     app: angular-client
 ---
+# Deployment for angular
+# See https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -37,7 +35,7 @@ metadata:
   labels:
     app: angular-client
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: angular-client
@@ -52,3 +50,25 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
+---
+# Ingress for the demo
+# See https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bazel-demo
+  labels:
+    app: bazel-demo
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/*
+        backend:
+          serviceName: java-spring-boot
+          servicePort: 8080
+      - path: /*
+        backend:
+          serviceName: angular-client
+          servicePort: 8080
+

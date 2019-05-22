@@ -30,7 +30,7 @@ data "google_container_engine_versions" "gke_versions" {
 resource "google_container_cluster" "primary" {
   name               = "gke-bazel-tutorial"
   zone               = "${var.zone}"
-  initial_node_count = 1
+  initial_node_count = 2
   min_master_version = "${data.google_container_engine_versions.gke_versions.latest_master_version}"
 
   // Scopes necessary for the nodes to function correctly

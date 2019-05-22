@@ -17,11 +17,15 @@
 PROJECT=$(gcloud config get-value project)
 CONTEXT=$(kubectl config get-contexts -o=name | \
 	grep "$PROJECT.*gke-bazel-tutorial")
+REPO="gcr.io/$PROJECT"
 
 echo "Deleting apps..."
-kubectl --namespace default --context="${CONTEXT}" \
-  delete svc/"angular-client" deploy/"angular-client"
-kubectl --namespace default --context="${CONTEXT}" \
-  delete svc/"java-spring-boot" deploy/"java-spring-boot"
-sleep 180
+CMD=(bazel run
+  "--incompatible_disallow_dict_plus=false"
+  --define "cluster=${CONTEXT}"
+  --define "repo=${REPO}"
+  //:bazel_demo_k8s.delete)
+
+"${CMD[@]}"
+
 echo "done."

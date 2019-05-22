@@ -32,7 +32,7 @@ public class TodoController {
 
   // Get all todos
   @GetMapping("/api/todos")
-  public ArrayList list_todos() {
+  public ArrayList<Todo> list_todos() {
     return todos;
   }
 
@@ -101,4 +101,21 @@ public class TodoController {
 
     throw new TodoNotFoundException();
   }
+
+  /**
+  * Default url '/'
+  */
+  @GetMapping("/")
+  public String healthCheck() {
+    return "here";
+  }
+
+  /**
+  * Default url '/api'
+  */
+  @GetMapping("/api")
+  public String baseURL() {
+    return "base url";
+  }
+
 }

@@ -54,6 +54,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	# shellcheck source=/dev/null
 	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
 else
+	echo "\n"
+	echo "Starting Build"
+	echo "${CMD[@]}"
 	"${CMD[@]}"
 fi
 
@@ -65,7 +68,7 @@ fi
 echo -n "Waiting for Angular service to setup endpoints..."
 for _ in {1..60}; do
   ANGULAR_IP=$(kubectl --namespace default --context="${CONTEXT}" \
-    get svc -lapp=angular-client -o jsonpath='{..ip}')
+    get ing -lapp=bazel-demo -o jsonpath='{..ip}')
   if [[ $ANGULAR_IP =~ [(0-9)+\.]{4} ]]; then
     echo "done."
     break
@@ -80,4 +83,4 @@ Check on the service and re-run 'make create'."
 	exit 1
 fi
 
-echo "View your angular client at http://${ANGULAR_IP}"
+echo "View your web app at http://${ANGULAR_IP}"

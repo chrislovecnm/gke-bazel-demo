@@ -35,7 +35,7 @@ crash.log
 #
 # example.tfvars
 
-bazel-*
+bazel-out
 
 dist
 js-client/dist

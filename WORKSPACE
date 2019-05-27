@@ -210,7 +210,7 @@ container_repositories()
 # it is pulled in.
 git_repository(
     name = "io_bazel_rules_k8s",
-    commit = "5c9e803a0af07968f6c04daae2a4fd011b355ed5",
+    commit = "a631adc254d11146364664eb66ac67a1e05396ff",
     remote = "https://github.com/bazelbuild/rules_k8s.git",
 )
 

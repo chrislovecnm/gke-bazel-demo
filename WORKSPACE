@@ -287,7 +287,7 @@ _java_image_repos()
 git_repository(
     name = "io_bazel_rules_scala",
     remote = "git://github.com/bazelbuild/rules_scala",
-    commit = "300b4369a0a56d9e590d9fea8a73c3913d758e12",
+    commit = "24b06eec5cedc25085203d588cca99e894a62345",
     )
 
 # Instantiate the "scala_repositories" Bazel rule

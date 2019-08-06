@@ -78,7 +78,7 @@ spec:
 
     stage('Bazel') {
         container(containerName) {
-          sh "bazel build //..."
+          sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECTID}"
       }
     }
 

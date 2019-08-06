@@ -69,22 +69,25 @@ spec:
          }
     }
 
-    stage('Lint') {
-        container(containerName) {
-          sh "make lint"
-      }
-    }
-
-    stage('Bazel') {
-        container(containerName) {
-          sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false"
-      }
-    }
-
-    stage('Terraform') {
-        container(containerName) {
-          sh "make terraform"
-        }
+    stage('Parallel Stages') {
+        parallel ( 
+            'Lint': { stage('Lint') {
+                container(containerName) {
+                    sh "make lint"
+                }
+            }},
+            'Bazel': { stage('Bazel') {
+          	    container(containerName) {
+                     // @chrislovecnm: TODO make this a multiple line string
+                     sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false"
+                }
+            }},
+            'Terraform': { stage('Terraform') {
+         	    container(containerName) {
+                    sh "make terraform"
+                }
+            }}
+        )
     }
 
     stage('Create') {
@@ -99,15 +102,13 @@ spec:
         }
     }
 
-  }
-   catch (err) {
+  } catch (err) {
       // if any exception occurs, mark the build as failed
       // and display a detailed message on the Jenkins console output
       currentBuild.result = 'FAILURE'
       echo "FAILURE caught echo ${err}"
       throw err
-   }
-   finally {
+   } finally {
      stage('Teardown') {
       container(containerName) {
         sh "make teardown"

@@ -68,9 +68,16 @@ spec:
           sh "gcloud config set compute/region ${env.REGION}"
          }
     }
+
     stage('Lint') {
         container(containerName) {
           sh "make lint"
+      }
+    }
+
+    stage('Bazel') {
+        container(containerName) {
+          sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false"
       }
     }
 

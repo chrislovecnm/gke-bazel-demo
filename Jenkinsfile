@@ -35,7 +35,9 @@ metadata:
 spec:
   containers:
   - name: ${containerName}
-    image: gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${env.CONTAINER_VERSION}
+    # commenting out for testing
+    # image: gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${env.CONTAINER_VERSION}
+    image: gcr.io/pso-helmsman-cicd/jenkins-k8s-node:jenkins-cicd_images_builder-188
     command: ['cat']
     tty: true
     volumeMounts:
@@ -71,6 +73,12 @@ spec:
     stage('Lint') {
         container(containerName) {
           sh "make lint"
+      }
+    }
+
+    stage('Bazel') {
+        container(containerName) {
+          sh "bazel build //..."
       }
     }
 

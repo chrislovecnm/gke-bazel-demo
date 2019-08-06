@@ -70,23 +70,29 @@ spec:
     }
 
     stage('Parallel Stages') {
-        parallel ( 
-            'Lint': { stage('Lint') {
-                container(containerName) {
-                    sh "make lint"
+        parallel (
+            'Lint': {
+                stage('Lint') {
+                    container(containerName) {
+                        sh "make lint"
+                    }
                 }
-            }},
-            'Bazel': { stage('Bazel') {
+            },
+            'Bazel': { 
+                stage('Bazel') {
           	    container(containerName) {
-                     // @chrislovecnm: TODO make this a multiple line string
-                     sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false"
-                }
-            }},
-            'Terraform': { stage('Terraform') {
-         	    container(containerName) {
-                    sh "make terraform"
-                }
-            }}
+                        // @chrislovecnm: TODO make this a multiple line string
+                        sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false  --incompatible_depset_is_not_iterable=false"
+                    }
+               }
+            },
+            'Terraform': {
+                stage('Terraform') {
+                    container(containerName) {
+                        sh "make terraform"
+                    }
+               }
+            }
         )
     }
 

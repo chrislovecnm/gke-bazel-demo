@@ -114,8 +114,6 @@ load("@build_bazel_rules_nodejs//:defs.bzl", "check_bazel_version", "yarn_instal
 # The minimum bazel version to use with this example repo is 0.21.0
 check_bazel_version("0.24.0")
 
-
-
 # With the yarn_install or npm_install repository rules, Bazel will setup your
 # node_modules for you in an external workspace named after the repository rule.
 # For example, a yarn_install(name = "npm", ...) will setup an external workspace

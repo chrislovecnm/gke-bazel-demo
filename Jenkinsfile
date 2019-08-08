@@ -17,25 +17,25 @@ limitations under the License.
 
 // Reference: https://github.com/jenkinsci/kubernetes-plugin
 // set up pod label and GOOGLE_APPLICATION_CREDENTIALS (for Terraform)
-def label = "k8s-infra"
+def label = "k8s-infra-bazel-demo"
 def containerName = "bazel-demo"
 def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
 def jenkins_container_version = env.JENKINS_CONTAINER_VERSION
 
 podTemplate(label: label,
-    containers: [
-        containerTemplate(name: "${containerName}",
-            image: "gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${jenkins_container_version}",
-            command: 'tail -f /dev/null',
-            resourceRequestCpu: '2000m',
-            resourceLimitCpu: '4000m',
-            resourceRequestMemory: '1Gi',
-            resourceLimitMemory: '2Gi'
-        )
-    ],
-    volumes: [secretVolume(mountPath: '/home/jenkins/dev',
-        secretName: 'jenkins-deploy-dev-infra'
-    )]
+        containers: [
+                containerTemplate(name: "${containerName}",
+                        image: "gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${jenkins_container_version}",
+                        command: 'tail -f /dev/null',
+                        resourceRequestCpu: '4000m',
+                        resourceLimitCpu: '6000m',
+                        resourceRequestMemory: '2Gi',
+                        resourceLimitMemory: '6Gi'
+                )
+        ],
+        volumes: [secretVolume(mountPath: '/home/jenkins/dev',
+                secretName: 'jenkins-deploy-dev-infra'
+        )]
 ) {
     node(label) {
         try {
@@ -59,15 +59,23 @@ podTemplate(label: label,
                     sh "make lint"
                 }
             }
-            stage('Terraform') {
-                container(containerName) {
-                    sh 'make terraform'
-                }
-            }
-            // TODO move this above Terraform
             stage('Bazel') {
                 container(containerName) {
-                    sh "bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} --incompatible_depset_union=false --incompatible_disallow_dict_plus=false"
+                    sh """bazel build //... --define cluster=dummy --define repo=gcr.io/${env.PROJECT_ID} \\
+                          --incompatible_depset_union=false --incompatible_disallow_dict_plus=false  \\
+                          --incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false"""
+                }
+            }
+            stage('Terraform') {
+                container(containerName) {
+                    sh "make terraform"
+                }
+            }
+            stage('Check Terraform') {
+		// This has to run after terraform init, so we run it after the cluster
+		// is up.
+                container(containerName) {
+                    sh "make check_terraform"
                 }
             }
             stage('Create') {

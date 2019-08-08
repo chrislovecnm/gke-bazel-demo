@@ -59,7 +59,7 @@ destroy_apps:
 # Linting for CI
 ######################################
 .PHONY: lint
-lint: check_shell check_shebangs check_python check_golang check_terraform \
+lint: check_shell check_shebangs check_python check_golang \
 	check_docker check_base_files check_headers check_trailing_whitespace
 # TODO (chrislovecnm): not supported yet
 #

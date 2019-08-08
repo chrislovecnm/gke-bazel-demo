@@ -55,6 +55,22 @@ teardown:
 destroy_apps:
 	@source scripts/destroy_apps.sh
 
+.PHONY: build
+build:
+	@bazel build //... --define cluster=dummy --define repo=gcr.io/foo \
+		--incompatible_depset_union=false --incompatible_disallow_dict_plus=false  \
+		--incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false
+.PHONY: test
+test:
+	@bazel test //... --define cluster=dummy --define repo=gcr.io/foo \
+		--incompatible_depset_union=false --incompatible_disallow_dict_plus=false  \
+		--incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false
+
+.PHONY: dev-server
+dev-server:
+	@bazel run //js-client/src:devserver --define cluster=dummy --define repo=gcr.io/foo \
+		--incompatible_depset_union=false --incompatible_disallow_dict_plus=false  \
+		--incompatible_depset_is_not_iterable=false --incompatible_new_actions_api=false
 #####################################
 # Linting for CI
 ######################################

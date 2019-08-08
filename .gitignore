@@ -50,3 +50,7 @@ planter
 !planter/.gitkeep
 
 output.log
+
+# Ignore Jetbrains files
+.idea/
+.ijwb/

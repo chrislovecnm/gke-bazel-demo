@@ -14,10 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-output "cluster_name" {
-  value = google_container_cluster.primary.name
-}
-
-output "primary_zone" {
-  value = google_container_cluster.primary.zone
+terraform {
+  required_version = ">= 0.12"
 }

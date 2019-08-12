@@ -23,30 +23,33 @@ limitations under the License.
 // Create the primary cluster for this project.
 ///////////////////////////////////////////////////////////////////////////////////////
 data "google_container_engine_versions" "gke_versions" {
-  zone = "${var.zone}"
+  location = var.zone
 }
 
 // Create the GKE Cluster
 resource "google_container_cluster" "primary" {
   name               = "gke-bazel-tutorial"
-  zone               = "${var.zone}"
+  location           = var.zone
   initial_node_count = 2
-  min_master_version = "${data.google_container_engine_versions.gke_versions.latest_master_version}"
+  min_master_version = data.google_container_engine_versions.gke_versions.latest_master_version
 
   // Scopes necessary for the nodes to function correctly
   node_config {
+
     oauth_scopes = [
-      "https://www.googleapis.com/auth/compute",
       "https://www.googleapis.com/auth/devstorage.read_only",
       "https://www.googleapis.com/auth/logging.write",
       "https://www.googleapis.com/auth/monitoring",
+      "https://www.googleapis.com/auth/servicecontrol",
+      "https://www.googleapis.com/auth/service.management.readonly",
+      "https://www.googleapis.com/auth/trace.append",
     ]
 
-    machine_type = "${var.node_machine_type}"
+    machine_type = var.node_machine_type
     image_type   = "COS"
 
     // (Optional) The Kubernetes labels (key/value pairs) to be applied to each node.
-    labels {
+    labels = {
       status = "poc"
     }
   }
@@ -66,11 +69,9 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  # TODO is this setting up ip aliasing properly?
+  # TODO setup a network for this
   ip_allocation_policy {
-    # Best practice
-    # Enable VPC-native IPs for pods and services
-    # Default behavior for new clusters in GKE 1.12
+    use_ip_aliases = true
   }
 
   provisioner "local-exec" {
@@ -83,6 +84,6 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_project_service" "container" {
-  service = "container.googleapis.com"
+  service            = "container.googleapis.com"
   disable_on_destroy = false
 }

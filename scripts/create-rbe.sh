@@ -54,7 +54,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 	# shellcheck source=/dev/null
 	source "$ROOT/scripts/planter.sh" "${CMD[*]}"
 else
-	echo "\n"
+	echo ""
 	echo "Starting Build"
 	echo "${CMD[@]}"
 	"${CMD[@]}"

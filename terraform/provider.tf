@@ -15,6 +15,12 @@ limitations under the License.
 */
 
 provider "google" {
-  project = "${var.project}"
-  version = "~> 1.19"
+  version = "2.10.0"
+  project = var.project
 }
+
+provider "google-beta" {
+  version = "2.12.0"
+  project = var.project
+}
+

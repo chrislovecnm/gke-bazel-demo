@@ -44,12 +44,13 @@ function docker() {
   find . -name "Dockerfile" -not -path "./planter/*" -exec hadolint {} \;
 }
 
-# This function runs 'terraform validate' against all
-# files ending in '.tf'
+# This function runs 'terraform validate'
 function check_terraform() {
   echo "Running terraform validate"
-  #shellcheck disable=SC2156
-  find . -name "*.tf" -not -path "./planter/*" -exec bash -c 'terraform validate $(dirname "{}")' \;
+  REPO_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+  cd "${REPO_ROOT}/terraform" || exit
+  terraform init
+  terraform validate
 }
 
 # This function runs 'go fmt' and 'go vet' on eery file

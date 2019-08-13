@@ -17,12 +17,12 @@ limitations under the License.
 
 // Reference: https://github.com/jenkinsci/kubernetes-plugin
 // set up pod label and GOOGLE_APPLICATION_CREDENTIALS (for Terraform)
-def label = "k8s-infra-bazel-demo"
-def containerName = "bazel-demo"
+def containerName = "bazel"
 def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
-def jenkins_container_version = env.JENKINS_CONTAINER_VERSION
+// @chrislovcnm TODO - update env.JENKINS_CONTAINER_VERSION once enterprise // demo is building as well.
+def jenkins_container_version = "28bac2b"
 
-podTemplate(label: label,
+podTemplate(
         containers: [
                 containerTemplate(name: "${containerName}",
                         image: "gcr.io/pso-helmsman-cicd/jenkins-k8s-node:${jenkins_container_version}",
@@ -37,7 +37,7 @@ podTemplate(label: label,
                 secretName: 'jenkins-deploy-dev-infra'
         )]
 ) {
-    node(label) {
+    node(POD_LABEL) {
         try {
             // set env variable GOOGLE_APPLICATION_CREDENTIALS for Terraform
             env.GOOGLE_APPLICATION_CREDENTIALS = GOOGLE_APPLICATION_CREDENTIALS
@@ -69,13 +69,6 @@ podTemplate(label: label,
             stage('Terraform') {
                 container(containerName) {
                     sh "make terraform"
-                }
-            }
-            stage('Check Terraform') {
-		// This has to run after terraform init, so we run it after the cluster
-		// is up.
-                container(containerName) {
-                    sh "make check_terraform"
                 }
             }
             stage('Create') {

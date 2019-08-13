@@ -20,7 +20,8 @@ limitations under the License.
 def label = "k8s-infra-bazel-demo"
 def containerName = "bazel-demo"
 def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
-def jenkins_container_version = env.JENKINS_CONTAINER_VERSION
+// bumping bazel verison
+def jenkins_container_version = "28bac2b"
 
 podTemplate(label: label,
         containers: [

@@ -19,7 +19,8 @@ limitations under the License.
 // set up pod label and GOOGLE_APPLICATION_CREDENTIALS (for Terraform)
 def containerName = "bazel"
 def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
-def jenkins_container_version = env.JENKINS_CONTAINER_VERSION
+// @chrislovcnm TODO - update env.JENKINS_CONTAINER_VERSION once enterprise // demo is building as well.
+def jenkins_container_version = "28bac2b"
 
 podTemplate(
         containers: [
@@ -68,13 +69,6 @@ podTemplate(
             stage('Terraform') {
                 container(containerName) {
                     sh "make terraform"
-                }
-            }
-            stage('Check Terraform') {
-		// This has to run after terraform init, so we run it after the cluster
-		// is up.
-                container(containerName) {
-                    sh "make check_terraform"
                 }
             }
             stage('Create') {

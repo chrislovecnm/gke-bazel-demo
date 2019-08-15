@@ -20,7 +20,7 @@ limitations under the License.
 def containerName = "bazel"
 def GOOGLE_APPLICATION_CREDENTIALS = '/home/jenkins/dev/jenkins-deploy-dev-infra.json'
 // @chrislovcnm TODO - update env.JENKINS_CONTAINER_VERSION once enterprise // demo is building as well.
-def jenkins_container_version = "28bac2b"
+def jenkins_container_version = "d671fe9"
 
 podTemplate(
         containers: [
